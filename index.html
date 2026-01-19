@@ -9,12 +9,10 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap');
         body { font-family: 'Inter', sans-serif; overflow-x: hidden; }
-        .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
-        .message-fade { animation: fadeIn 0.3s ease-in-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .speaking { box-shadow: 0 0 25px rgba(245, 158, 11, 0.3); border-color: #f59e0b !important; }
+        .speaking { box-shadow: 0 0 25px rgba(245, 158, 11, 0.2); border-color: #f59e0b !important; }
         
         .nav-link { position: relative; transition: all 0.3s; }
         .nav-link.active { color: #f59e0b; }
@@ -22,267 +20,124 @@
 
         .hud-select {
             appearance: none;
-            background: rgba(15, 23, 42, 0.8);
+            background: rgba(15, 23, 42, 0.9);
             border: 1px solid rgba(245, 158, 11, 0.3);
             color: #f59e0b;
             padding: 0.5rem 2rem 0.5rem 1rem;
             border-radius: 9999px;
             font-size: 0.75rem;
             font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
             cursor: pointer;
             outline: none;
-            transition: all 0.3s;
-        }
-        .hud-select:hover {
-            border-color: #f59e0b;
-            box-shadow: 0 0 15px rgba(245, 158, 11, 0.2);
         }
         
         .ai-glow { animation: glow 2s infinite alternate; }
-        @keyframes glow { from { box-shadow: 0 0 5px rgba(245, 158, 11, 0.2); } to { box-shadow: 0 0 15px rgba(245, 158, 11, 0.5); } }
+        @keyframes glow { from { box-shadow: 0 0 5px rgba(245, 158, 11, 0.1); } to { box-shadow: 0 0 15px rgba(245, 158, 11, 0.4); } }
     </style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col">
 
     <!-- HUD de Idioma -->
     <div class="fixed top-4 right-6 z-[60] flex items-center gap-3">
-        <div class="hidden md:flex flex-col items-end">
-            <span id="label-global-lang" class="text-[9px] text-slate-500 uppercase font-bold tracking-widest">Idioma Global</span>
-        </div>
-        <div class="relative">
-            <select id="global-lang-selector" class="hud-select">
-                <option value="pt">Português (PT)</option>
-                <option value="en">English (US)</option>
-                <option value="es">Español (ES)</option>
-                <option value="fr">Français (FR)</option>
-                <option value="it">Italiano (IT)</option>
-                <option value="de">Deutsch (DE)</option>
-            </select>
-            <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[10px]">▼</div>
-        </div>
+        <select id="global-lang-selector" class="hud-select">
+            <option value="pt">Português (PT)</option>
+            <option value="en">English (US)</option>
+            <option value="es">Español (ES)</option>
+            <option value="fr">Français (FR)</option>
+        </select>
     </div>
 
     <!-- Navegação -->
     <nav class="w-full border-b border-white/5 bg-slate-950/80 backdrop-blur-md sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
             <div class="flex items-center gap-8">
-                <h1 class="text-2xl font-bold bg-gradient-to-r from-amber-400 to-yellow-600 bg-clip-text text-transparent cursor-pointer" onclick="showPage('home')">
-                    Áurea
-                </h1>
+                <h1 class="text-2xl font-bold bg-gradient-to-r from-amber-400 to-yellow-600 bg-clip-text text-transparent">Áurea</h1>
                 <div class="hidden md:flex gap-6 text-sm font-medium text-slate-400">
-                    <button onclick="showPage('home')" class="nav-link active" id="nav-home">Laboratório</button>
-                    <button onclick="showPage('history')" class="nav-link" id="nav-history">Histórico</button>
+                    <button class="nav-link active">Laboratório</button>
+                    <button class="nav-link">Histórico</button>
                 </div>
             </div>
-            <div class="flex items-center gap-4 pr-32 md:pr-40">
-                <div class="flex items-center gap-2 glass px-3 py-1 rounded-full text-[10px] uppercase text-emerald-400">
-                    <span id="status-dot" class="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></span>
-                    <span id="status-text">Sincronizando</span>
-                </div>
+            <div class="flex items-center gap-2 glass px-3 py-1 rounded-full text-[10px] uppercase text-emerald-400">
+                <span class="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></span>
+                <span>Sistema Ativo</span>
             </div>
         </div>
     </nav>
 
     <main class="flex-grow w-full max-w-7xl mx-auto p-4 md:p-8">
-        
-        <div id="page-home" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             
             <!-- Chat -->
-            <section id="chat-section" class="glass p-5 rounded-2xl flex flex-col h-[700px] transition-all duration-500">
+            <section class="glass p-5 rounded-2xl flex flex-col h-[650px]" id="chat-section">
                 <div class="flex justify-between items-center mb-4">
-                    <h2 id="title-assistant" class="text-lg font-semibold flex items-center gap-2">💬 Assistente</h2>
-                    <div class="flex gap-2">
-                        <button id="suggest-idea-btn" class="text-[10px] bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1 rounded-lg font-bold transition-all uppercase ai-glow">✨ Ideia</button>
-                        <button id="new-chat-btn" class="text-[10px] bg-slate-800 hover:bg-slate-700 text-white px-3 py-1 rounded-lg font-bold transition-all uppercase">Limpar</button>
-                    </div>
+                    <h2 class="text-lg font-semibold">💬 Assistente</h2>
+                    <button id="suggest-idea-btn" class="text-[9px] bg-indigo-600 px-2 py-1 rounded font-bold uppercase ai-glow">Ideia</button>
                 </div>
 
-                <div id="chat-container" class="flex-grow flex flex-col overflow-hidden">
-                    <div id="chat-output" class="flex-grow overflow-y-auto mb-4 space-y-4 pr-2 text-xs text-slate-300 custom-scrollbar">
-                        <div id="chat-empty-msg" class="text-slate-500 text-center mt-10 italic text-[10px] uppercase tracking-widest">Inicie um diálogo</div>
-                    </div>
-                    
-                    <div class="space-y-2 bg-slate-900/50 p-2 rounded-xl border border-white/5 relative">
-                        <div id="typing-indicator" class="hidden text-[10px] text-amber-500 animate-pulse italic absolute -top-4 left-2">Áurea está a processar...</div>
-                        <input type="text" id="chat-input" 
-                               class="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-sm text-white focus:ring-2 focus:ring-amber-500 outline-none block" 
-                               placeholder="Diz olá à Áurea..." autocomplete="off">
-                        <button id="send-btn" class="w-full bg-amber-600 hover:bg-amber-500 py-3 rounded-lg text-xs font-bold shadow-lg active:scale-95 transition-all text-white uppercase">
-                            Enviar
-                        </button>
-                    </div>
+                <div id="chat-output" class="flex-grow overflow-y-auto mb-4 space-y-4 pr-2 text-xs custom-scrollbar">
+                    <div class="text-slate-500 text-center mt-10 italic text-[10px] uppercase">Aguardando mensagem...</div>
+                </div>
+                
+                <div class="space-y-2 relative">
+                    <div id="typing-indicator" class="hidden text-[10px] text-amber-500 animate-pulse absolute -top-5 left-0">Áurea está a pensar...</div>
+                    <input type="text" id="chat-input" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-sm focus:ring-1 focus:ring-amber-500 outline-none" placeholder="Pergunta algo...">
+                    <button id="send-btn" class="w-full bg-amber-600 hover:bg-amber-500 py-3 rounded-lg text-xs font-bold transition-all uppercase">Enviar</button>
                 </div>
             </section>
 
             <!-- Status de Voz -->
-            <section class="glass p-5 rounded-2xl flex flex-col h-[700px]">
-                <h2 id="title-voice" class="text-lg font-semibold mb-4 flex items-center gap-2">🎙️ Voz</h2>
-                <div class="flex-grow bg-slate-900/50 rounded-xl border border-slate-800 p-4 flex flex-col gap-6">
-                    <div class="space-y-4">
-                        <div class="bg-slate-950 p-3 rounded-lg border border-white/5">
-                            <label id="label-active-lang" class="text-[9px] text-slate-500 uppercase font-bold block mb-1 tracking-widest">Idioma Ativo</label>
-                            <span id="detected-lang" class="text-emerald-400 font-mono text-sm">PT</span>
-                        </div>
-                        <div class="bg-slate-950 p-3 rounded-lg border border-white/5">
-                            <label id="label-assigned-voice" class="text-[9px] text-slate-500 uppercase font-bold block mb-1 tracking-widest">Voz Atribuída</label>
-                            <span id="assigned-voice" class="text-amber-400 font-mono text-sm">Kore</span>
-                        </div>
+            <section class="glass p-5 rounded-2xl flex flex-col h-[650px]">
+                <h2 class="text-lg font-semibold mb-4">🎙️ Voz</h2>
+                <div class="flex-grow bg-slate-900/30 rounded-xl p-4 flex flex-col gap-4 border border-white/5">
+                    <div class="bg-slate-950 p-3 rounded-lg border border-white/5">
+                        <span class="text-[9px] text-slate-500 uppercase font-bold block">Voz Atual</span>
+                        <span id="assigned-voice" class="text-amber-400 font-mono text-sm">Kore</span>
                     </div>
 
                     <div class="flex-grow flex items-center justify-center">
-                        <div id="voice-waves" class="hidden flex gap-1 items-end h-12">
-                            <div class="w-1.5 bg-amber-500 animate-bounce rounded-full" style="animation-duration: 0.5s"></div>
-                            <div class="w-1.5 bg-amber-500 animate-bounce rounded-full" style="animation-duration: 0.8s"></div>
-                            <div class="w-1.5 bg-amber-500 animate-bounce rounded-full" style="animation-duration: 0.6s"></div>
-                            <div class="w-1.5 bg-amber-500 animate-bounce rounded-full" style="animation-duration: 0.4s"></div>
-                            <div class="w-1.5 bg-amber-500 animate-bounce rounded-full" style="animation-duration: 0.7s"></div>
+                        <div id="voice-waves" class="hidden flex gap-1 items-end h-8">
+                            <div class="w-1.5 bg-amber-500 animate-bounce h-4"></div>
+                            <div class="w-1.5 bg-amber-500 animate-bounce h-8"></div>
+                            <div class="w-1.5 bg-amber-500 animate-bounce h-6"></div>
                         </div>
-                        <div id="voice-idle" class="text-slate-700 text-[10px] uppercase tracking-widest text-center">Aguardando interação</div>
+                        <div id="voice-idle" class="text-slate-700 text-[9px] uppercase tracking-widest text-center">Silêncio</div>
                     </div>
 
-                    <button id="toggle-auto-tts" class="w-full bg-slate-800 py-3 rounded-lg text-[10px] hover:bg-slate-700 transition-all border border-slate-700 font-bold uppercase">
-                        Sintetizador: <span id="tts-status" class="text-amber-500">Ligado</span>
+                    <button id="toggle-auto-tts" class="w-full bg-slate-800 py-3 rounded-lg text-[10px] font-bold border border-slate-700 uppercase">
+                        Voz: <span id="tts-status" class="text-amber-500">Ligada</span>
                     </button>
                 </div>
             </section>
 
-            <!-- Editor de Código -->
-            <section class="glass p-5 rounded-2xl flex flex-col h-[700px] lg:col-span-2">
+            <!-- Editor -->
+            <section class="glass p-5 rounded-2xl flex flex-col h-[650px] lg:col-span-2">
                 <div class="flex justify-between items-center mb-4">
-                    <h2 id="title-editor" class="text-lg font-semibold">💻 Editor de Código</h2>
+                    <h2 class="text-lg font-semibold">💻 Code Lab</h2>
                     <div class="flex gap-2">
-                        <button id="ai-explain-btn" class="text-[10px] bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded-lg font-bold transition-all uppercase ai-glow">✨ Explicar</button>
-                        <button id="ai-refactor-btn" class="text-[10px] bg-purple-600 hover:bg-purple-500 text-white px-3 py-1.5 rounded-lg font-bold transition-all uppercase ai-glow">✨ Refatorar</button>
-                        <button id="toggle-preview-btn" class="text-[10px] bg-slate-800 hover:bg-slate-700 px-4 py-1.5 rounded-lg border border-slate-700 font-bold transition-all uppercase">Visualizar</button>
+                        <button id="ai-explain-btn" class="text-[9px] bg-blue-600 px-3 py-1 rounded font-bold uppercase">Explicar</button>
+                        <button id="toggle-preview-btn" class="text-[9px] bg-slate-800 px-3 py-1 rounded border border-slate-700 font-bold uppercase">Visualizar</button>
                     </div>
                 </div>
-                <div class="flex-grow flex flex-col overflow-hidden relative">
-                    <div id="editor-loading" class="hidden absolute inset-0 bg-slate-950/80 z-10 flex items-center justify-center rounded-xl">
-                        <div class="text-amber-500 animate-pulse text-xs font-bold uppercase tracking-widest">Processando com Gemini...</div>
-                    </div>
-                    <textarea id="code-editor" class="flex-grow bg-slate-950 border border-slate-800 rounded-xl p-4 text-[12px] text-emerald-400 font-mono focus:outline-none custom-scrollbar resize-none" placeholder="// Escreva HTML/JS aqui..."></textarea>
+                <div class="flex-grow flex flex-col relative overflow-hidden">
+                    <textarea id="code-editor" class="flex-grow bg-slate-950 border border-slate-800 rounded-xl p-4 text-[12px] text-emerald-400 font-mono focus:outline-none custom-scrollbar resize-none" placeholder="<!-- Escreve aqui -->"></textarea>
                     <div id="code-preview-container" class="hidden flex-grow border border-slate-700 bg-white rounded-xl overflow-hidden">
                         <iframe id="preview-iframe" class="w-full h-full border-none"></iframe>
                     </div>
                 </div>
             </section>
         </div>
-
-        <!-- Histórico -->
-        <div id="page-history" class="hidden min-h-[600px] glass p-8 rounded-3xl">
-            <div class="flex justify-between items-center mb-8">
-                <h2 id="history-header" class="text-3xl font-bold">Histórico</h2>
-                <button onclick="showPage('home')" id="btn-back-lab" class="text-sm bg-slate-800 hover:bg-slate-700 px-6 py-2 rounded-full transition-all">Voltar ao Lab</button>
-            </div>
-            <div id="threads-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div id="sync-text" class="text-slate-600 italic">Sincronizando...</div>
-            </div>
-        </div>
-
     </main>
 
-    <footer class="w-full py-8 border-t border-white/5 mt-auto">
-        <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4 text-slate-500 text-xs">
-            <div class="flex items-center gap-2">
-                <span class="w-2 h-2 bg-slate-800 rounded-full"></span>
-                <span id="footer-version">Áurea IA v2.5 - Integração Pro ✨</span>
-            </div>
-            <div class="font-medium tracking-widest uppercase flex items-center gap-2">
-                <span id="footer-made-by">Feito por</span> <span class="text-amber-500 font-bold">Gemini</span>
-                <span class="text-slate-700">|</span>
-                <span class="text-[9px]">Google AI Lab</span>
-            </div>
-            <div class="flex gap-4">
-                <a href="#" id="footer-terms" class="hover:text-white transition-colors">Termos</a>
-                <a href="#" id="footer-privacy" class="hover:text-white transition-colors">Privacidade</a>
-            </div>
-        </div>
-    </footer>
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        const firebaseConfig = JSON.parse(__firebase_config);
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'ia-lab-site-pro';
-
-        let currentUser = null;
-        let currentThreadId = null;
-        let autoTTS = true;
+    <script>
+        const API_KEY = "AIzaSyCjT9PaqfTCCqfX2KGcKxcNmVPD8B_1mRY";
         let currentLang = 'pt';
-        const apiKey = "AIzaSyCjT9PaqfTCCqfX2KGcKxcNmVPD8B_1mRY"; 
+        let autoTTS = true;
 
-        const voiceMap = { 'pt': 'Kore', 'en': 'Puck', 'fr': 'Charon', 'es': 'Zephyr', 'de': 'Fenrir', 'it': 'Leda' };
+        const voiceMap = { 'pt': 'Kore', 'en': 'Puck', 'es': 'Zephyr', 'fr': 'Charon' };
 
-        const translations = {
-            pt: {
-                navHome: "Laboratório", navHistory: "Histórico", statusText: "Sincronizando",
-                statusOnline: "ONLINE", titleAssistant: "💬 Assistente", btnClear: "Limpar",
-                chatEmpty: "Inicie um diálogo", inputPlaceholder: "Diz olá à Áurea...",
-                btnSend: "Enviar", titleVoice: "🎙️ Voz", labelActiveLang: "Idioma Ativo",
-                labelAssignedVoice: "Voz Atribuída", voiceIdle: "Aguardando interação",
-                btnTts: "Sintetizador:", ttsOn: "Ligado", ttsOff: "Desligado",
-                titleEditor: "💻 Editor de Código", btnView: "Visualizar", btnCode: "Código",
-                historyHeader: "Histórico", btnBackLab: "Voltar ao Lab", syncText: "Sincronizando...",
-                footerVersion: "Áurea IA v2.5 - Integração Pro ✨", footerMadeBy: "Feito por",
-                footerTerms: "Termos", footerPrivacy: "Privacidade", labelGlobalLang: "Idioma Global",
-                typing: "Áurea está a processar...", btnIdea: "✨ Ideia", btnExplain: "✨ Explicar", btnRefactor: "✨ Refatorar"
-            },
-            en: {
-                navHome: "Laboratory", navHistory: "History", statusText: "Syncing",
-                statusOnline: "ONLINE", titleAssistant: "💬 Assistant", btnClear: "Clear",
-                chatEmpty: "Start a conversation", inputPlaceholder: "Say hello to Áurea...",
-                btnSend: "Send", titleVoice: "🎙️ Voice", labelActiveLang: "Active Language",
-                labelAssignedVoice: "Assigned Voice", voiceIdle: "Waiting for interaction",
-                btnTts: "Synthesizer:", ttsOn: "On", ttsOff: "Off",
-                titleEditor: "💻 Code Editor", btnView: "Preview", btnCode: "Code",
-                historyHeader: "History", btnBackLab: "Back to Lab", syncText: "Syncing...",
-                footerVersion: "Áurea IA v2.5 - Pro Integration ✨", footerMadeBy: "Made by",
-                footerTerms: "Terms", footerPrivacy: "Privacy", labelGlobalLang: "Global Language",
-                typing: "Áurea is processing...", btnIdea: "✨ Idea", btnExplain: "✨ Explain", btnRefactor: "✨ Refactor"
-            }
-        };
-
-        function updateUILanguage(lang) {
-            const t = translations[lang] || translations.pt;
-            document.getElementById('nav-home').innerText = t.navHome;
-            document.getElementById('nav-history').innerText = t.navHistory;
-            document.getElementById('status-text').innerText = (currentUser) ? t.statusOnline : t.statusText;
-            document.getElementById('title-assistant').innerHTML = `💬 ${t.titleAssistant}`;
-            document.getElementById('new-chat-btn').innerText = t.btnClear;
-            if (document.getElementById('chat-empty-msg')) document.getElementById('chat-empty-msg').innerText = t.chatEmpty;
-            document.getElementById('chat-input').placeholder = t.inputPlaceholder;
-            document.getElementById('send-btn').innerText = t.btnSend;
-            document.getElementById('title-voice').innerHTML = `🎙️ ${t.titleVoice}`;
-            document.getElementById('label-active-lang').innerText = t.labelActiveLang;
-            document.getElementById('label-assigned-voice').innerText = t.labelAssignedVoice;
-            document.getElementById('voice-idle').innerText = t.voiceIdle;
-            document.getElementById('toggle-auto-tts').innerHTML = `${t.btnTts} <span id="tts-status" class="text-amber-500">${autoTTS ? t.ttsOn : t.ttsOff}</span>`;
-            document.getElementById('title-editor').innerText = t.titleEditor;
-            document.getElementById('toggle-preview-btn').innerText = document.getElementById('code-preview-container').classList.contains('hidden') ? t.btnView : t.btnCode;
-            document.getElementById('history-header').innerText = t.historyHeader;
-            document.getElementById('btn-back-lab').innerText = t.btnBackLab;
-            if (document.getElementById('sync-text')) document.getElementById('sync-text').innerText = t.syncText;
-            document.getElementById('footer-version').innerText = t.footerVersion;
-            document.getElementById('footer-made-by').innerText = t.footerMadeBy;
-            document.getElementById('footer-terms').innerText = t.footerTerms;
-            document.getElementById('footer-privacy').innerText = t.footerPrivacy;
-            document.getElementById('label-global-lang').innerText = t.labelGlobalLang;
-            document.getElementById('typing-indicator').innerText = t.typing;
-            document.getElementById('suggest-idea-btn').innerText = t.btnIdea;
-            document.getElementById('ai-explain-btn').innerText = t.btnExplain;
-            document.getElementById('ai-refactor-btn').innerText = t.btnRefactor;
-        }
-
-        // --- GEMINI API HELPERS ---
-        async function callGemini(prompt, system, isJson = true) {
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+        // Helper para o Gemini
+        async function fetchGemini(prompt, system, isJson = true) {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${API_KEY}`;
             const res = await fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -295,113 +150,37 @@
             return await res.json();
         }
 
-        async function aiRefactorCode() {
-            const editor = document.getElementById('code-editor');
-            const code = editor.value.trim();
-            if (!code) return;
-
-            document.getElementById('editor-loading').classList.remove('hidden');
-            const system = `És um engenheiro de software sénior. Refatora o código HTML/JS fornecido para ser mais limpo, moderno e eficiente. Retorna apenas o código refatorado dentro de um JSON: {"code": "..."}`;
-            
-            try {
-                const data = await callGemini(code, system);
-                const result = JSON.parse(data.candidates[0].content.parts[0].text);
-                editor.value = result.code;
-            } catch (e) {
-                console.error("Refactor error", e);
-            } finally {
-                document.getElementById('editor-loading').classList.add('hidden');
-            }
-        }
-
-        async function aiExplainCode() {
-            const code = document.getElementById('code-editor').value.trim();
-            if (!code) return;
-
-            document.getElementById('typing-indicator').classList.remove('hidden');
-            const system = `Explica o seguinte código de forma simples para um estudante. Usa o idioma: ${currentLang}. Retorna JSON: {"explanation": "..."}`;
-            
-            try {
-                const data = await callGemini(code, system);
-                const result = JSON.parse(data.candidates[0].content.parts[0].text);
-                appendMessage('assistant', result.explanation);
-                speak(result.explanation, currentLang);
-            } catch (e) {
-                appendMessage('assistant', "Não consegui explicar este código agora.");
-            } finally {
-                document.getElementById('typing-indicator').classList.add('hidden');
-            }
-        }
-
-        async function aiSuggestIdea() {
-            document.getElementById('typing-indicator').classList.remove('hidden');
-            const system = `Sugere uma ideia criativa de pequeno projeto web (HTML/JS) para o utilizador praticar. Sê inspirador. Idioma: ${currentLang}. Retorna JSON: {"idea": "...", "steps": "..."}`;
-            
-            try {
-                const data = await callGemini("Sugere uma ideia aleatória", system);
-                const result = JSON.parse(data.candidates[0].content.parts[0].text);
-                const fullMsg = `**✨ Ideia de Projeto:** ${result.idea}\n\n**Passos sugeridos:**\n${result.steps}`;
-                appendMessage('assistant', fullMsg);
-                speak(result.idea, currentLang);
-            } catch (e) {
-                appendMessage('assistant', "Sem ideias de momento, tenta novamente!");
-            } finally {
-                document.getElementById('typing-indicator').classList.add('hidden');
-            }
-        }
-
-        // --- EXISTING CORE LOGIC ---
-        function pcmToWav(pcmBase64, sampleRate = 24000) {
+        // Sintetizador de Voz (PCM para WAV)
+        function pcmToWav(pcmBase64) {
             const binaryString = window.atob(pcmBase64);
             const len = binaryString.length;
             const bytes = new Uint8Array(len);
             for (let i = 0; i < len; i++) bytes[i] = binaryString.charCodeAt(i);
             const buffer = new ArrayBuffer(44 + bytes.length);
             const view = new DataView(buffer);
-            const writeString = (offset, string) => { for (let i = 0; i < string.length; i++) view.setUint8(offset + i, string.charCodeAt(i)); };
+            const writeString = (o, s) => { for (let i = 0; i < s.length; i++) view.setUint8(o + i, s.charCodeAt(i)); };
             writeString(0, 'RIFF'); view.setUint32(4, 36 + bytes.length, true);
             writeString(8, 'WAVE'); writeString(12, 'fmt '); view.setUint32(16, 16, true);
-            view.setUint16(20, 1, true); view.setUint16(22, 1, true); view.setUint32(24, sampleRate, true);
-            view.setUint32(28, sampleRate * 2, true); view.setUint16(32, 2, true); view.setUint16(34, 16, true);
+            view.setUint16(20, 1, true); view.setUint16(22, 1, true); view.setUint32(24, 24000, true);
+            view.setUint32(28, 48000, true); view.setUint16(32, 2, true); view.setUint16(34, 16, true);
             writeString(36, 'data'); view.setUint32(40, bytes.length, true);
             new Uint8Array(buffer, 44).set(bytes);
             return new Blob([buffer], { type: 'audio/wav' });
         }
 
-        window.showPage = (pageId) => {
-            document.getElementById('page-home').classList.add('hidden');
-            document.getElementById('page-history').classList.add('hidden');
-            document.getElementById(`page-${pageId}`).classList.remove('hidden');
-            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-            const navBtn = document.getElementById(`nav-${pageId}`);
-            if(navBtn) navBtn.classList.add('active');
-        };
-
-        function appendMessage(role, text) {
-            const out = document.getElementById('chat-output');
-            const empty = document.getElementById('chat-empty-msg');
-            if (empty) empty.remove();
-            const isU = role === 'user';
-            const div = document.createElement('div');
-            div.className = `flex flex-col ${isU ? 'items-end' : 'items-start'} message-fade`;
-            div.innerHTML = `<div class="max-w-[90%] p-3 rounded-2xl border ${isU ? 'bg-amber-600/20 border-amber-500/30 text-amber-50' : 'bg-slate-900 border-slate-800 text-slate-200'}">${marked.parse(text)}</div>`;
-            out.appendChild(div);
-            out.scrollTop = out.scrollHeight;
-        }
-
-        async function speak(text, langCode = 'pt') {
+        async function speak(text) {
             if (!autoTTS) return;
-            const voice = voiceMap[langCode] || 'Kore';
-            document.getElementById('assigned-voice').innerText = voice;
+            const voice = voiceMap[currentLang] || 'Kore';
             document.getElementById('voice-waves').classList.remove('hidden');
             document.getElementById('voice-idle').classList.add('hidden');
             document.getElementById('chat-section').classList.add('speaking');
+
             try {
-                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`, {
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${API_KEY}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        contents: [{ parts: [{ text: text.slice(0, 500) }] }],
+                        contents: [{ parts: [{ text: text.slice(0, 400) }] }],
                         generationConfig: { 
                             responseModalities: ["AUDIO"],
                             speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: voice } } } 
@@ -410,90 +189,66 @@
                     })
                 });
                 const data = await res.json();
-                const wavBlob = pcmToWav(data.candidates[0].content.parts[0].inlineData.data);
-                const audio = new Audio(URL.createObjectURL(wavBlob));
-                audio.onended = () => {
-                    document.getElementById('voice-waves').classList.add('hidden');
-                    document.getElementById('voice-idle').classList.remove('hidden');
-                    document.getElementById('chat-section').classList.remove('speaking');
-                };
+                const audio = new Audio(URL.createObjectURL(pcmToWav(data.candidates[0].content.parts[0].inlineData.data)));
+                audio.onended = () => resetVoiceUI();
                 audio.play();
-            } catch (e) {
-                document.getElementById('voice-waves').classList.add('hidden');
-                document.getElementById('voice-idle').classList.remove('hidden');
-                document.getElementById('chat-section').classList.remove('speaking');
-            }
+            } catch (e) { resetVoiceUI(); }
         }
 
-        async function sendMessage() {
+        function resetVoiceUI() {
+            document.getElementById('voice-waves').classList.add('hidden');
+            document.getElementById('voice-idle').classList.remove('hidden');
+            document.getElementById('chat-section').classList.remove('speaking');
+        }
+
+        function appendChat(role, text) {
+            const out = document.getElementById('chat-output');
+            const div = document.createElement('div');
+            const isU = role === 'user';
+            div.className = `flex ${isU ? 'justify-end' : 'justify-start'}`;
+            div.innerHTML = `<div class="max-w-[85%] p-3 rounded-xl ${isU ? 'bg-amber-600/20 text-amber-50' : 'bg-slate-900 text-slate-300'}">${marked.parse(text)}</div>`;
+            out.appendChild(div);
+            out.scrollTop = out.scrollHeight;
+        }
+
+        async function handleSend() {
             const input = document.getElementById('chat-input');
-            const text = input.value.trim();
-            if (!text) return;
+            const val = input.value.trim();
+            if (!val) return;
             input.value = '';
+            appendChat('user', val);
             document.getElementById('typing-indicator').classList.remove('hidden');
-            appendMessage('user', text);
+
             try {
-                const system = `És a Áurea, assistente gentil. Idioma: ${currentLang}. Responde amigavelmente. JSON: {"lang": "${currentLang}", "reply": "..."}`;
-                const data = await callGemini(text, system);
-                const result = JSON.parse(data.candidates[0].content.parts[0].text);
-                document.getElementById('detected-lang').innerText = result.lang.toUpperCase();
-                appendMessage('assistant', result.reply);
-                speak(result.reply, result.lang);
-            } catch (err) {
-                appendMessage('assistant', "Erro na comunicação.");
-            } finally {
-                document.getElementById('typing-indicator').classList.add('hidden');
-            }
+                const system = `És a Áurea, assistente de IA para desenvolvimento. Responde no idioma: ${currentLang}. Retorna JSON: {"reply": "..."}`;
+                const data = await fetchGemini(val, system);
+                const reply = JSON.parse(data.candidates[0].content.parts[0].text).reply;
+                appendChat('assistant', reply);
+                speak(reply);
+            } catch (e) { appendChat('assistant', "Erro na conexão."); }
+            finally { document.getElementById('typing-indicator').classList.add('hidden'); }
         }
 
-        function setupApp() {
-            const input = document.getElementById('chat-input');
-            const langSelector = document.getElementById('global-lang-selector');
-
-            langSelector.onchange = (e) => {
-                currentLang = e.target.value;
-                updateUILanguage(currentLang);
-                document.getElementById('detected-lang').innerText = currentLang.toUpperCase();
-            };
-
-            document.getElementById('send-btn').onclick = sendMessage;
-            input.onkeydown = e => { if(e.key === 'Enter') sendMessage(); };
-            document.getElementById('ai-refactor-btn').onclick = aiRefactorCode;
-            document.getElementById('ai-explain-btn').onclick = aiExplainCode;
-            document.getElementById('suggest-idea-btn').onclick = aiSuggestIdea;
-
-            document.getElementById('new-chat-btn').onclick = () => {
-                currentThreadId = null;
-                document.getElementById('chat-output').innerHTML = '';
-            };
-            document.getElementById('toggle-auto-tts').onclick = () => {
-                autoTTS = !autoTTS;
-                updateUILanguage(currentLang);
-            };
-            document.getElementById('toggle-preview-btn').onclick = () => {
-                const cont = document.getElementById('code-preview-container');
-                const editor = document.getElementById('code-editor');
-                if(cont.classList.contains('hidden')) {
-                    document.getElementById('preview-iframe').src = URL.createObjectURL(new Blob([editor.value], {type:'text/html'}));
-                    cont.classList.remove('hidden'); editor.classList.add('hidden');
-                } else {
-                    cont.classList.add('hidden'); editor.classList.remove('hidden');
-                }
-                updateUILanguage(currentLang);
-            };
-            updateUILanguage(currentLang);
-        }
-
-        onAuthStateChanged(auth, u => {
-            if (u) {
-                currentUser = u;
-                document.getElementById('status-dot').className = "w-2 h-2 bg-emerald-500 rounded-full";
+        // Eventos
+        document.getElementById('send-btn').onclick = handleSend;
+        document.getElementById('chat-input').onkeydown = e => e.key === 'Enter' && handleSend();
+        document.getElementById('global-lang-selector').onchange = e => {
+            currentLang = e.target.value;
+            document.getElementById('assigned-voice').innerText = voiceMap[currentLang];
+        };
+        document.getElementById('toggle-auto-tts').onclick = () => {
+            autoTTS = !autoTTS;
+            document.getElementById('tts-status').innerText = autoTTS ? 'Ligada' : 'Desligada';
+        };
+        document.getElementById('toggle-preview-btn').onclick = () => {
+            const editor = document.getElementById('code-editor');
+            const preview = document.getElementById('code-preview-container');
+            if (preview.classList.contains('hidden')) {
+                document.getElementById('preview-iframe').srcdoc = editor.value;
+                preview.classList.remove('hidden'); editor.classList.add('hidden');
+            } else {
+                preview.classList.add('hidden'); editor.classList.remove('hidden');
             }
-        });
-
-        window.onload = () => {
-            setupApp();
-            signInAnonymously(auth);
         };
     </script>
 </body>
