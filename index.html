@@ -14,9 +14,12 @@
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
         .speaking { box-shadow: 0 0 25px rgba(245, 158, 11, 0.2); border-color: #f59e0b !important; }
         
-        .nav-link { position: relative; transition: all 0.3s; }
-        .nav-link.active { color: #f59e0b; }
-        .nav-link.active::after { content: ''; position: absolute; bottom: -4px; left: 0; width: 100%; height: 2px; background: #f59e0b; }
+        input, textarea {
+            position: relative;
+            z-index: 50 !important;
+            cursor: text !important;
+            pointer-events: auto !important;
+        }
 
         .hud-select {
             appearance: none;
@@ -38,7 +41,7 @@
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col">
 
     <!-- HUD de Idioma -->
-    <div class="fixed top-4 right-6 z-[60] flex items-center gap-3">
+    <div class="fixed top-4 right-6 z-[100] flex items-center gap-3">
         <select id="global-lang-selector" class="hud-select">
             <option value="pt">Português (PT)</option>
             <option value="en">English (US)</option>
@@ -48,63 +51,63 @@
     </div>
 
     <!-- Navegação -->
-    <nav class="w-full border-b border-white/5 bg-slate-950/80 backdrop-blur-md sticky top-0 z-50">
+    <nav class="w-full border-b border-white/5 bg-slate-950/80 backdrop-blur-md sticky top-0 z-[60]">
         <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
             <div class="flex items-center gap-8">
                 <h1 class="text-2xl font-bold bg-gradient-to-r from-amber-400 to-yellow-600 bg-clip-text text-transparent">Áurea</h1>
-                <div class="hidden md:flex gap-6 text-sm font-medium text-slate-400">
-                    <button class="nav-link active">Laboratório</button>
-                    <button class="nav-link">Histórico</button>
-                </div>
             </div>
             <div class="flex items-center gap-2 glass px-3 py-1 rounded-full text-[10px] uppercase text-emerald-400">
                 <span class="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></span>
-                <span>Sistema Ativo</span>
+                <span data-i18n="system_active">Sistema Ativo</span>
             </div>
         </div>
     </nav>
 
-    <main class="flex-grow w-full max-w-7xl mx-auto p-4 md:p-8">
+    <main class="flex-grow w-full max-w-7xl mx-auto p-4 md:p-8 z-10">
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             
             <!-- Chat -->
-            <section class="glass p-5 rounded-2xl flex flex-col h-[650px]" id="chat-section">
+            <section class="glass p-5 rounded-2xl flex flex-col h-[650px] relative" id="chat-section">
                 <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-lg font-semibold">💬 Assistente</h2>
-                    <button id="suggest-idea-btn" class="text-[9px] bg-indigo-600 px-2 py-1 rounded font-bold uppercase ai-glow">Ideia</button>
+                    <h2 class="text-lg font-semibold"><span data-i18n="assistant_title">💬 Assistente</span></h2>
+                    <button id="suggest-idea-btn" class="text-[9px] bg-indigo-600 px-2 py-1 rounded font-bold uppercase ai-glow z-20" data-i18n="btn_idea">Ideia</button>
                 </div>
 
                 <div id="chat-output" class="flex-grow overflow-y-auto mb-4 space-y-4 pr-2 text-xs custom-scrollbar">
-                    <div class="text-slate-500 text-center mt-10 italic text-[10px] uppercase">Aguardando mensagem...</div>
+                    <div class="text-slate-500 text-center mt-10 italic text-[10px] uppercase" data-i18n="waiting_msg">Aguardando mensagem...</div>
                 </div>
                 
-                <div class="space-y-2 relative">
-                    <div id="typing-indicator" class="hidden text-[10px] text-amber-500 animate-pulse absolute -top-5 left-0">Áurea está a pensar...</div>
-                    <input type="text" id="chat-input" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-sm focus:ring-1 focus:ring-amber-500 outline-none" placeholder="Pergunta algo...">
-                    <button id="send-btn" class="w-full bg-amber-600 hover:bg-amber-500 py-3 rounded-lg text-xs font-bold transition-all uppercase">Enviar</button>
+                <div class="space-y-2">
+                    <div id="typing-indicator" class="hidden text-[10px] text-amber-500 animate-pulse mb-1" data-i18n="ai_thinking">Áurea está a pensar...</div>
+                    <div class="relative">
+                        <input type="text" id="chat-input" 
+                            class="w-full bg-slate-900 border-2 border-slate-700 rounded-lg px-4 py-3 text-sm focus:border-amber-500 outline-none transition-all placeholder-slate-500" 
+                            data-i18n-placeholder="input_placeholder"
+                            placeholder="Escreve aqui..."
+                            autocomplete="off">
+                    </div>
+                    <button id="send-btn" class="w-full bg-amber-600 hover:bg-amber-500 py-3 rounded-lg text-xs font-bold transition-all uppercase z-20" data-i18n="btn_send">Enviar</button>
                 </div>
             </section>
 
             <!-- Status de Voz -->
             <section class="glass p-5 rounded-2xl flex flex-col h-[650px]">
-                <h2 class="text-lg font-semibold mb-4">🎙️ Voz</h2>
+                <h2 class="text-lg font-semibold mb-4"><span data-i18n="voice_title">🎙️ Voz</span></h2>
                 <div class="flex-grow bg-slate-900/30 rounded-xl p-4 flex flex-col gap-4 border border-white/5">
                     <div class="bg-slate-950 p-3 rounded-lg border border-white/5">
-                        <span class="text-[9px] text-slate-500 uppercase font-bold block">Voz Atual</span>
+                        <span class="text-[9px] text-slate-500 uppercase font-bold block" data-i18n="current_voice">Voz Atual</span>
                         <span id="assigned-voice" class="text-amber-400 font-mono text-sm">Kore</span>
                     </div>
-
                     <div class="flex-grow flex items-center justify-center">
                         <div id="voice-waves" class="hidden flex gap-1 items-end h-8">
                             <div class="w-1.5 bg-amber-500 animate-bounce h-4"></div>
                             <div class="w-1.5 bg-amber-500 animate-bounce h-8"></div>
                             <div class="w-1.5 bg-amber-500 animate-bounce h-6"></div>
                         </div>
-                        <div id="voice-idle" class="text-slate-700 text-[9px] uppercase tracking-widest text-center">Silêncio</div>
+                        <div id="voice-idle" class="text-slate-700 text-[9px] uppercase tracking-widest text-center" data-i18n="silence">Silêncio</div>
                     </div>
-
                     <button id="toggle-auto-tts" class="w-full bg-slate-800 py-3 rounded-lg text-[10px] font-bold border border-slate-700 uppercase">
-                        Voz: <span id="tts-status" class="text-amber-500">Ligada</span>
+                        <span data-i18n="voice_label">Voz</span>: <span id="tts-status" class="text-amber-500" data-i18n="status_on">Ligada</span>
                     </button>
                 </div>
             </section>
@@ -112,15 +115,18 @@
             <!-- Editor -->
             <section class="glass p-5 rounded-2xl flex flex-col h-[650px] lg:col-span-2">
                 <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-lg font-semibold">💻 Code Lab</h2>
+                    <h2 class="text-lg font-semibold"><span data-i18n="code_lab_title">💻 Code Lab</span></h2>
                     <div class="flex gap-2">
-                        <button id="ai-explain-btn" class="text-[9px] bg-blue-600 px-3 py-1 rounded font-bold uppercase">Explicar</button>
-                        <button id="toggle-preview-btn" class="text-[9px] bg-slate-800 px-3 py-1 rounded border border-slate-700 font-bold uppercase">Visualizar</button>
+                        <button id="ai-explain-btn" class="text-[9px] bg-blue-600 px-3 py-1 rounded font-bold uppercase z-20" data-i18n="btn_explain">Explicar</button>
+                        <button id="toggle-preview-btn" class="text-[9px] bg-slate-800 px-3 py-1 rounded border border-slate-700 font-bold uppercase z-20" data-i18n="btn_preview">Visualizar</button>
                     </div>
                 </div>
                 <div class="flex-grow flex flex-col relative overflow-hidden">
-                    <textarea id="code-editor" class="flex-grow bg-slate-950 border border-slate-800 rounded-xl p-4 text-[12px] text-emerald-400 font-mono focus:outline-none custom-scrollbar resize-none" placeholder="<!-- Escreve aqui -->"></textarea>
-                    <div id="code-preview-container" class="hidden flex-grow border border-slate-700 bg-white rounded-xl overflow-hidden">
+                    <textarea id="code-editor" 
+                        class="flex-grow bg-slate-950 border-2 border-slate-800 rounded-xl p-4 text-[12px] text-emerald-400 font-mono focus:outline-none focus:border-emerald-600 custom-scrollbar resize-none" 
+                        data-i18n-placeholder="code_placeholder"
+                        placeholder="<!-- Escreve o teu código aqui... -->"></textarea>
+                    <div id="code-preview-container" class="hidden flex-grow border border-slate-700 bg-white rounded-xl overflow-hidden z-30">
                         <iframe id="preview-iframe" class="w-full h-full border-none"></iframe>
                     </div>
                 </div>
@@ -133,9 +139,105 @@
         let currentLang = 'pt';
         let autoTTS = true;
 
+        const translations = {
+            pt: {
+                system_active: "Sistema Ativo",
+                assistant_title: "💬 Assistente",
+                btn_idea: "Ideia",
+                waiting_msg: "Aguardando mensagem...",
+                ai_thinking: "Áurea está a pensar...",
+                input_placeholder: "Escreve aqui...",
+                btn_send: "Enviar",
+                voice_title: "🎙️ Voz",
+                current_voice: "Voz Atual",
+                silence: "Silêncio",
+                voice_label: "Voz",
+                status_on: "Ligada",
+                status_off: "Desligada",
+                code_lab_title: "💻 Code Lab",
+                btn_explain: "Explicar",
+                btn_preview: "Visualizar",
+                btn_code: "Código",
+                code_placeholder: "<!-- Escreve o teu código aqui... -->"
+            },
+            en: {
+                system_active: "System Active",
+                assistant_title: "💬 Assistant",
+                btn_idea: "Idea",
+                waiting_msg: "Waiting for message...",
+                ai_thinking: "Áurea is thinking...",
+                input_placeholder: "Type here...",
+                btn_send: "Send",
+                voice_title: "🎙️ Voice",
+                current_voice: "Current Voice",
+                silence: "Silence",
+                voice_label: "Voice",
+                status_on: "On",
+                status_off: "Off",
+                code_lab_title: "💻 Code Lab",
+                btn_explain: "Explain",
+                btn_preview: "Preview",
+                btn_code: "Code",
+                code_placeholder: "<!-- Write your code here... -->"
+            },
+            es: {
+                system_active: "Sistema Activo",
+                assistant_title: "💬 Asistente",
+                btn_idea: "Idea",
+                waiting_msg: "Esperando mensaje...",
+                ai_thinking: "Áurea está pensando...",
+                input_placeholder: "Escribe aquí...",
+                btn_send: "Enviar",
+                voice_title: "🎙️ Voz",
+                current_voice: "Voz Actual",
+                silence: "Silencio",
+                voice_label: "Voz",
+                status_on: "Activada",
+                status_off: "Desactivada",
+                code_lab_title: "💻 Code Lab",
+                btn_explain: "Explicar",
+                btn_preview: "Visualizar",
+                btn_code: "Código",
+                code_placeholder: "<!-- Escribe tu código aquí... -->"
+            },
+            fr: {
+                system_active: "Système Actif",
+                assistant_title: "💬 Assistant",
+                btn_idea: "Idée",
+                waiting_msg: "En attente d'un message...",
+                ai_thinking: "Áurea réfléchit...",
+                input_placeholder: "Écrivez ici...",
+                btn_send: "Envoyer",
+                voice_title: "🎙️ Voix",
+                current_voice: "Voix Actuelle",
+                silence: "Silence",
+                voice_label: "Voix",
+                status_on: "Activée",
+                status_off: "Désactivée",
+                code_lab_title: "💻 Labo Code",
+                btn_explain: "Expliquer",
+                btn_preview: "Aperçu",
+                btn_code: "Code",
+                code_placeholder: "<!-- Écrivez votre code ici... -->"
+            }
+        };
+
         const voiceMap = { 'pt': 'Kore', 'en': 'Puck', 'es': 'Zephyr', 'fr': 'Charon' };
 
-        // Helper para o Gemini
+        function updateInterface() {
+            const langData = translations[currentLang];
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (langData[key]) el.textContent = langData[key];
+            });
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                const key = el.getAttribute('data-i18n-placeholder');
+                if (langData[key]) el.placeholder = langData[key];
+            });
+            // Update TTS button specifically
+            document.getElementById('tts-status').textContent = autoTTS ? langData.status_on : langData.status_off;
+        }
+
         async function fetchGemini(prompt, system, isJson = true) {
             const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${API_KEY}`;
             const res = await fetch(url, {
@@ -150,7 +252,6 @@
             return await res.json();
         }
 
-        // Sintetizador de Voz (PCM para WAV)
         function pcmToWav(pcmBase64) {
             const binaryString = window.atob(pcmBase64);
             const len = binaryString.length;
@@ -171,9 +272,13 @@
         async function speak(text) {
             if (!autoTTS) return;
             const voice = voiceMap[currentLang] || 'Kore';
-            document.getElementById('voice-waves').classList.remove('hidden');
-            document.getElementById('voice-idle').classList.add('hidden');
-            document.getElementById('chat-section').classList.add('speaking');
+            const waves = document.getElementById('voice-waves');
+            const idle = document.getElementById('voice-idle');
+            const section = document.getElementById('chat-section');
+            
+            waves.classList.remove('hidden');
+            idle.classList.add('hidden');
+            section.classList.add('speaking');
 
             try {
                 const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${API_KEY}`, {
@@ -190,22 +295,24 @@
                 });
                 const data = await res.json();
                 const audio = new Audio(URL.createObjectURL(pcmToWav(data.candidates[0].content.parts[0].inlineData.data)));
-                audio.onended = () => resetVoiceUI();
+                audio.onended = () => {
+                    waves.classList.add('hidden');
+                    idle.classList.remove('hidden');
+                    section.classList.remove('speaking');
+                };
                 audio.play();
-            } catch (e) { resetVoiceUI(); }
-        }
-
-        function resetVoiceUI() {
-            document.getElementById('voice-waves').classList.add('hidden');
-            document.getElementById('voice-idle').classList.remove('hidden');
-            document.getElementById('chat-section').classList.remove('speaking');
+            } catch (e) {
+                waves.classList.add('hidden');
+                idle.classList.remove('hidden');
+                section.classList.remove('speaking');
+            }
         }
 
         function appendChat(role, text) {
             const out = document.getElementById('chat-output');
             const div = document.createElement('div');
             const isU = role === 'user';
-            div.className = `flex ${isU ? 'justify-end' : 'justify-start'}`;
+            div.className = `flex ${isU ? 'justify-end' : 'justify-start'} w-full`;
             div.innerHTML = `<div class="max-w-[85%] p-3 rounded-xl ${isU ? 'bg-amber-600/20 text-amber-50' : 'bg-slate-900 text-slate-300'}">${marked.parse(text)}</div>`;
             out.appendChild(div);
             out.scrollTop = out.scrollHeight;
@@ -220,36 +327,72 @@
             document.getElementById('typing-indicator').classList.remove('hidden');
 
             try {
-                const system = `És a Áurea, assistente de IA para desenvolvimento. Responde no idioma: ${currentLang}. Retorna JSON: {"reply": "..."}`;
+                const system = `You are Áurea, an AI assistant. Respond in: ${currentLang}. Use the following persona: professional, helpful, and concise. Return JSON: {"reply": "..."}`;
                 const data = await fetchGemini(val, system);
                 const reply = JSON.parse(data.candidates[0].content.parts[0].text).reply;
                 appendChat('assistant', reply);
                 speak(reply);
-            } catch (e) { appendChat('assistant', "Erro na conexão."); }
+            } catch (e) { appendChat('assistant', "Connection Error."); }
             finally { document.getElementById('typing-indicator').classList.add('hidden'); }
         }
 
         // Eventos
-        document.getElementById('send-btn').onclick = handleSend;
-        document.getElementById('chat-input').onkeydown = e => e.key === 'Enter' && handleSend();
+        document.getElementById('send-btn').addEventListener('click', handleSend);
+        document.getElementById('chat-input').addEventListener('keydown', e => e.key === 'Enter' && handleSend());
+        
         document.getElementById('global-lang-selector').onchange = e => {
             currentLang = e.target.value;
             document.getElementById('assigned-voice').innerText = voiceMap[currentLang];
+            updateInterface();
         };
+
         document.getElementById('toggle-auto-tts').onclick = () => {
             autoTTS = !autoTTS;
-            document.getElementById('tts-status').innerText = autoTTS ? 'Ligada' : 'Desligada';
+            updateInterface();
         };
+
         document.getElementById('toggle-preview-btn').onclick = () => {
             const editor = document.getElementById('code-editor');
             const preview = document.getElementById('code-preview-container');
+            const btn = document.getElementById('toggle-preview-btn');
+            const langData = translations[currentLang];
+            
             if (preview.classList.contains('hidden')) {
                 document.getElementById('preview-iframe').srcdoc = editor.value;
-                preview.classList.remove('hidden'); editor.classList.add('hidden');
+                preview.classList.remove('hidden'); 
+                editor.classList.add('hidden');
+                btn.textContent = langData.btn_code;
             } else {
-                preview.classList.add('hidden'); editor.classList.remove('hidden');
+                preview.classList.add('hidden'); 
+                editor.classList.remove('hidden');
+                btn.textContent = langData.btn_preview;
             }
         };
+
+        document.getElementById('suggest-idea-btn').onclick = async () => {
+            document.getElementById('typing-indicator').classList.remove('hidden');
+            try {
+                const data = await fetchGemini("Suggest a simple project idea", `Language: ${currentLang}. JSON: {"reply": "..."}`);
+                const reply = JSON.parse(data.candidates[0].content.parts[0].text).reply;
+                appendChat('assistant', reply);
+                speak(reply);
+            } catch (e) {} finally { document.getElementById('typing-indicator').classList.add('hidden'); }
+        };
+
+        document.getElementById('ai-explain-btn').onclick = async () => {
+            const code = document.getElementById('code-editor').value;
+            if(!code) return;
+            document.getElementById('typing-indicator').classList.remove('hidden');
+            try {
+                const data = await fetchGemini(`Explain this code: ${code}`, `Language: ${currentLang}. JSON: {"reply": "..."}`);
+                const reply = JSON.parse(data.candidates[0].content.parts[0].text).reply;
+                appendChat('assistant', reply);
+                speak(reply);
+            } catch (e) {} finally { document.getElementById('typing-indicator').classList.add('hidden'); }
+        };
+
+        // Initialize translation
+        updateInterface();
     </script>
 </body>
 </html>
