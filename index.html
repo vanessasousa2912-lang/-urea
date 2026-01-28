@@ -3,60 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Áurea - IA Lab Pro (Cloud Edition)</title>
+    <title>Áurea - IA Lab Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #020617; color: #f8fafc; margin: 0; }
+        body { font-family: 'Inter', sans-serif; background-color: #020617; color: #f8fafc; margin: 0; overflow-x: hidden; }
         .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
         .ai-glow { animation: glow 2s infinite alternate; }
         @keyframes glow { from { box-shadow: 0 0 5px rgba(245, 158, 11, 0.2); } to { box-shadow: 0 0 20px rgba(245, 158, 11, 0.5); } }
-        pre { background: #0f172a !important; padding: 1rem; border-radius: 0.5rem; overflow-x: auto; margin: 0.5rem 0; font-size: 0.8rem; }
+        pre { background: #0f172a !important; padding: 1rem; border-radius: 0.5rem; overflow-x: auto; margin: 0.5rem 0; font-size: 0.8rem; border: 1px solid rgba(255,255,255,0.05); }
+        code { font-family: 'Fira Code', monospace; color: #fbbf24; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col md:flex-row">
 
-    <!-- Sidebar Cloud -->
-    <aside class="w-full md:w-64 border-r border-white/5 bg-slate-950 flex flex-col h-screen sticky top-0">
+    <!-- Sidebar -->
+    <aside class="w-full md:w-64 border-r border-white/5 bg-slate-950 flex flex-col h-screen sticky top-0 z-[100]">
         <div class="p-4 border-b border-white/5">
-            <button id="new-chat-btn" class="w-full flex items-center justify-center gap-2 bg-amber-600 hover:bg-amber-500 p-3 rounded-xl transition-all text-sm font-bold text-white shadow-lg">
+            <button id="new-chat-btn" class="w-full flex items-center justify-center gap-2 bg-amber-600 hover:bg-amber-500 p-3 rounded-xl transition-all text-sm font-bold text-white shadow-lg active:scale-95">
                 <span>+ Novo Chat</span>
             </button>
         </div>
         <div id="history-list" class="flex-grow overflow-y-auto p-2 custom-scrollbar space-y-2">
-            <div class="p-4 text-center text-slate-500 text-[10px] animate-pulse">A SINCRONIZAR...</div>
+            <div id="loading-history" class="p-4 text-center text-slate-500 text-[10px] animate-pulse uppercase tracking-widest">
+                Sincronizando...
+            </div>
         </div>
-        <div class="p-4 border-t border-white/5 text-center text-[10px] text-slate-500 uppercase tracking-widest">
-            Áurea Cloud Sincronizada
+        <div class="p-4 border-t border-white/5 text-[10px] text-slate-500 text-center font-medium tracking-tighter">
+            LAB ID: <span id="display-id" class="opacity-50">---</span>
         </div>
     </aside>
 
-    <!-- Main Content -->
+    <!-- Main -->
     <div class="flex-grow flex flex-col min-h-screen relative">
         <header class="h-16 border-b border-white/5 flex items-center justify-between px-6 bg-slate-950/80 backdrop-blur-md sticky top-0 z-50">
-            <h1 class="text-xl font-black bg-gradient-to-r from-amber-400 to-yellow-600 bg-clip-text text-transparent">ÁUREA</h1>
-            <div id="status-badge" class="flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-bold uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-                <span>Conectado</span>
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-amber-600 rounded-lg flex items-center justify-center font-black text-white shadow-lg ai-glow">Á</div>
+                <h1 class="text-lg font-black bg-gradient-to-r from-amber-400 to-yellow-600 bg-clip-text text-transparent tracking-tight">ÁUREA LAB</h1>
+            </div>
+            <div id="connection-status" class="flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-bold uppercase bg-slate-800 text-slate-400 border border-white/5">
+                <span id="status-dot" class="w-2 h-2 bg-slate-500 rounded-full"></span>
+                <span id="status-text">A ligar...</span>
             </div>
         </header>
 
-        <main class="p-4 md:p-8 max-w-5xl mx-auto w-full flex-grow flex flex-col">
-            <div id="chat-output" class="flex-grow space-y-6 mb-6 overflow-y-auto pr-2 custom-scrollbar min-h-[400px]">
-                <div class="text-center py-20 text-slate-500">
-                    <p class="text-xl font-light">Bem-vindo, Luís!</p>
-                    <p class="text-xs uppercase tracking-widest mt-2">A carregar os teus desafios de química...</p>
-                </div>
+        <main class="p-4 md:p-8 max-w-4xl mx-auto w-full flex-grow flex flex-col">
+            <div id="chat-output" class="flex-grow space-y-6 mb-8 overflow-y-auto pr-2 custom-scrollbar min-h-[50vh]">
+                <!-- Mensagens aparecerão aqui -->
             </div>
 
-            <div class="sticky bottom-4">
-                <div id="typing-indicator" class="hidden text-[10px] text-amber-500 animate-pulse mb-2 ml-2">ÁUREA ESTÁ A PROCESSAR...</div>
-                <div class="glass p-2 rounded-2xl flex gap-2 items-end shadow-2xl">
-                    <textarea id="chat-input" class="flex-grow bg-transparent p-3 text-sm focus:outline-none resize-none h-12 max-h-40 custom-scrollbar" placeholder="Pergunta-me sobre uma reação química..."></textarea>
-                    <button id="send-btn" class="bg-amber-600 hover:bg-amber-500 p-3 rounded-xl text-white transition-all active:scale-95">
+            <div class="sticky bottom-6">
+                <div id="typing-indicator" class="hidden text-[10px] text-amber-500 animate-pulse mb-2 ml-2 font-bold tracking-widest uppercase">Áurea está a analisar...</div>
+                <div class="glass p-2 rounded-2xl flex gap-2 items-end shadow-2xl border-white/10">
+                    <textarea id="chat-input" class="flex-grow bg-transparent p-3 text-sm focus:outline-none resize-none h-12 max-h-40 custom-scrollbar text-slate-200" placeholder="Luís, pergunta algo sobre química ou código..."></textarea>
+                    <button id="send-btn" class="bg-amber-600 hover:bg-amber-500 p-3 rounded-xl text-white transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
                     </button>
                 </div>
@@ -69,152 +72,182 @@
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, doc, setDoc, onSnapshot, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Configuração Firebase (Automática no Canvas)
+        // Globais do Ambiente Canvas
         const firebaseConfig = JSON.parse(__firebase_config);
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const apiKey = ""; // Injetada no ambiente
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'ia-lab-luis';
+        const apiKey = ""; 
 
-        let user = null;
+        let currentUser = null;
         let sessions = [];
         let currentSessionId = null;
 
-        // Autenticação (Regra 3)
-        const initAuth = async () => {
-            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                await signInWithCustomToken(auth, __initial_auth_token);
-            } else {
-                await signInAnonymously(auth);
+        // 1. Ciclo de Autenticação (Regra 3)
+        async function startAuth() {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (err) {
+                updateStatus('Erro', 'red');
             }
-        };
-        initAuth();
+        }
 
-        onAuthStateChanged(auth, (u) => {
-            user = u;
+        onAuthStateChanged(auth, (user) => {
             if (user) {
-                setupFirestore();
+                currentUser = user;
+                document.getElementById('display-id').innerText = user.uid.substring(0, 8);
+                updateStatus('Conectado', 'emerald');
+                setupDatabase();
+            } else {
+                updateStatus('Desligado', 'slate');
             }
         });
 
-        function setupFirestore() {
-            if (!user) return;
-            const sessionsPath = collection(db, 'artifacts', appId, 'users', user.uid, 'sessions');
+        // 2. Setup do Firestore (Regras 1 e 2)
+        function setupDatabase() {
+            if (!currentUser) return;
+            const path = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'sessions');
             
-            onSnapshot(sessionsPath, (snapshot) => {
-                sessions = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+            onSnapshot(path, (snapshot) => {
+                document.getElementById('loading-history')?.remove();
+                sessions = snapshot.docs.map(d => ({ id: d.id, ...d.data() }))
                     .sort((a, b) => (b.updatedAt?.seconds || 0) - (a.updatedAt?.seconds || 0));
                 
-                renderHistory();
-                
+                renderSidebar();
+
+                // Se abrir e não houver nada, cria o primeiro chat automaticamente
                 if (!currentSessionId && sessions.length > 0) {
-                    loadSession(sessions[0].id);
-                } else if (!currentSessionId && sessions.length === 0) {
-                    startNewChat();
+                    loadChat(sessions[0].id);
+                } else if (!currentSessionId) {
+                    createNewChat();
                 }
-            }, (err) => console.error("Erro no Firestore:", err));
+            }, (error) => {
+                console.error("Erro Firestore:", error);
+            });
         }
 
-        function renderHistory() {
+        function updateStatus(text, color) {
+            const dot = document.getElementById('status-dot');
+            const label = document.getElementById('status-text');
+            dot.className = `w-2 h-2 rounded-full bg-${color}-500 ${color === 'emerald' ? 'animate-pulse' : ''}`;
+            label.innerText = text;
+            label.className = `text-${color}-400`;
+        }
+
+        function renderSidebar() {
             const list = document.getElementById('history-list');
             list.innerHTML = '';
             sessions.forEach(s => {
                 const btn = document.createElement('button');
-                btn.className = `w-full text-left p-3 rounded-lg text-xs truncate transition-all ${s.id === currentSessionId ? 'bg-amber-600/20 text-amber-500 border border-amber-600/30' : 'text-slate-400 hover:bg-white/5'}`;
-                btn.innerText = s.title || 'Chat s/ título';
-                btn.onclick = () => loadSession(s.id);
+                const isActive = s.id === currentSessionId;
+                btn.className = `w-full text-left p-3 rounded-xl text-xs truncate transition-all border ${isActive ? 'bg-amber-600/10 border-amber-500/30 text-amber-500 font-bold' : 'text-slate-400 border-transparent hover:bg-white/5'}`;
+                btn.innerText = s.title || 'Conversa de Química';
+                btn.onclick = () => loadChat(s.id);
                 list.appendChild(btn);
             });
         }
 
-        function loadSession(id) {
+        function loadChat(id) {
             currentSessionId = id;
             const session = sessions.find(s => s.id === id);
             const out = document.getElementById('chat-output');
             out.innerHTML = '';
+            
             if (session && session.history) {
-                session.history.forEach(msg => appendMessage(msg.role === 'user' ? 'user' : 'assistant', msg.parts[0].text));
+                session.history.forEach(m => appendUI(m.role === 'user' ? 'user' : 'ai', m.parts[0].text));
+            } else {
+                out.innerHTML = `<div class="text-center py-20 text-slate-600 text-xs uppercase tracking-widest">Inicia o desafio, Luís!</div>`;
             }
-            renderHistory();
+            renderSidebar();
         }
 
-        function appendMessage(role, text) {
-            const out = document.getElementById('chat-output');
-            const isUser = role === 'user';
-            const div = document.createElement('div');
-            div.className = `flex ${isUser ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`;
-            
-            const content = typeof marked !== 'undefined' ? marked.parse(text) : text;
-            
-            div.innerHTML = `
-                <div class="max-w-[85%] p-4 rounded-2xl ${isUser ? 'bg-amber-600 text-white shadow-lg' : 'bg-slate-900 border border-white/5 text-slate-200'}">
-                    <div class="prose prose-invert text-sm">${content}</div>
-                </div>
-            `;
-            out.appendChild(div);
-            out.scrollTop = out.scrollHeight;
-        }
-
-        async function startNewChat() {
-            currentSessionId = Date.now().toString();
-            const sessionDoc = doc(db, 'artifacts', appId, 'users', user.uid, 'sessions', currentSessionId);
-            await setDoc(sessionDoc, {
-                title: 'Novo Chat...',
+        async function createNewChat() {
+            if (!currentUser) return;
+            const id = Date.now().toString();
+            const ref = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'sessions', id);
+            await setDoc(ref, {
+                title: 'Novo Experimento',
                 history: [],
                 updatedAt: serverTimestamp()
             });
-            document.getElementById('chat-output').innerHTML = '';
+            currentSessionId = id;
         }
 
-        async function sendMessage() {
+        function appendUI(role, text) {
+            const out = document.getElementById('chat-output');
+            const isUser = role === 'user';
+            const msg = document.createElement('div');
+            msg.className = `flex ${isUser ? 'justify-end' : 'justify-start'} mb-2`;
+            
+            const html = marked.parse(text);
+            
+            msg.innerHTML = `
+                <div class="max-w-[85%] p-4 rounded-2xl shadow-sm ${isUser ? 'bg-amber-600 text-white' : 'bg-slate-900 border border-white/5 text-slate-200'}">
+                    <div class="prose prose-invert text-sm leading-relaxed">${html}</div>
+                </div>
+            `;
+            out.appendChild(msg);
+            out.scrollTop = out.scrollHeight;
+        }
+
+        async function handleSend() {
             const input = document.getElementById('chat-input');
-            const text = input.value.trim();
-            if (!text || !user || !currentSessionId) return;
+            const val = input.value.trim();
+            if (!val || !currentUser || !currentSessionId) return;
 
             input.value = '';
-            appendMessage('user', text);
+            appendUI('user', val);
             
             const session = sessions.find(s => s.id === currentSessionId) || { history: [] };
-            const history = session.history || [];
-            history.push({ role: 'user', parts: [{ text }] });
+            const history = [...(session.history || [])];
+            history.push({ role: 'user', parts: [{ text: val }] });
 
             document.getElementById('typing-indicator').classList.remove('hidden');
 
             try {
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         contents: history,
-                        systemInstruction: { parts: [{ text: "És a Áurea, assistente de laboratório do Luís. Gostas de química e tecnologia." }] }
+                        systemInstruction: { parts: [{ text: "És a Áurea, a IA assistente do Luís. És especialista em química e tecnologia. Responde de forma clara e encorajadora. Se ele pedir um código, usa formatação markdown." }] }
                     })
                 });
-                
-                const data = await response.json();
-                const aiReply = data.candidates[0].content.parts[0].text;
-                
-                appendMessage('assistant', aiReply);
-                history.push({ role: 'model', parts: [{ text: aiReply }] });
 
-                const sessionDoc = doc(db, 'artifacts', appId, 'users', user.uid, 'sessions', currentSessionId);
-                await updateDoc(sessionDoc, {
+                const data = await res.json();
+                const reply = data.candidates[0].content.parts[0].text;
+                
+                appendUI('ai', reply);
+                history.push({ role: 'model', parts: [{ text: reply }] });
+
+                const ref = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'sessions', currentSessionId);
+                await updateDoc(ref, {
                     history: history,
                     updatedAt: serverTimestamp(),
-                    title: history.length <= 2 ? text.substring(0, 25) : session.title
+                    title: history.length <= 2 ? val.substring(0, 25) : session.title
                 });
 
-            } catch (e) {
-                console.error(e);
-                appendMessage('assistant', "Erro na ligação ao laboratório central.");
+            } catch (err) {
+                appendUI('ai', "⚠️ Houve um problema na rede. Tenta novamente.");
             } finally {
                 document.getElementById('typing-indicator').classList.add('hidden');
             }
         }
 
-        document.getElementById('send-btn').onclick = sendMessage;
-        document.getElementById('chat-input').onkeydown = e => { if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }};
-        document.getElementById('new-chat-btn').onclick = startNewChat;
+        // Eventos
+        document.getElementById('send-btn').onclick = handleSend;
+        document.getElementById('chat-input').onkeydown = (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
+        };
+        document.getElementById('new-chat-btn').onclick = createNewChat;
+
+        // Início
+        startAuth();
     </script>
 </body>
 </html>
