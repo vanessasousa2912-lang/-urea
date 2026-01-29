@@ -6,13 +6,22 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// A tua chave que enviaste está segura aqui no backend
-const GEMINI_API_KEY = "AIzaSyCjT9PaqfTCCqfX2KGcKxcNmVPD8B_1mRY";
+// CONFIGURAÇÃO SEGURA:
+// O comando process.env vai procurar a chave que escreveste no painel do Render.
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`;
 
-// Rota que o teu index.html vai chamar
+// Rota de comunicação entre o teu Site e a IA
 app.post('/api/chat', async (req, res) => {
     try {
+        // Log para ajudar a depurar no Render
+        console.log("Recebida nova consulta para a Áurea...");
+
+        if (!GEMINI_API_KEY) {
+            console.error("ERRO: A variável GEMINI_API_KEY não foi configurada no Render.");
+            return res.status(500).json({ error: "Configuração de API ausente no servidor." });
+        }
+
         const response = await fetch(GEMINI_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -20,17 +29,24 @@ app.post('/api/chat', async (req, res) => {
         });
 
         const data = await response.json();
+        
+        // Envia a resposta de volta para o index.html
         res.json(data);
+
     } catch (error) {
-        console.error("Erro no servidor:", error);
-        res.status(500).json({ error: "Erro ao comunicar com Gemini" });
+        console.error("Erro crítico no servidor:", error);
+        res.status(500).json({ error: "O servidor falhou ao processar o pedido." });
     }
 });
 
-// Servir os ficheiros estáticos (o teu index.html)
+// Serve o teu index.html automaticamente
 app.use(express.static('.'));
 
+// Define a porta do servidor (o Render fornece uma automaticamente)
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`Servidor Áurea a correr na porta ${PORT}`);
+    console.log(`-----------------------------------------`);
+    console.log(`🚀 Áurea Lab Online!`);
+    console.log(`📡 Porta: ${PORT}`);
+    console.log(`-----------------------------------------`);
 });
