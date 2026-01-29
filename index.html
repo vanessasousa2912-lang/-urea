@@ -5,64 +5,58 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Áurea - IA Lab Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #020617; color: #f8fafc; margin: 0; overflow-x: hidden; }
+        body { font-family: 'Inter', sans-serif; background-color: #020617; }
         .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
-        .ai-glow { animation: glow 2s infinite alternate; }
-        @keyframes glow { from { box-shadow: 0 0 5px rgba(245, 158, 11, 0.2); } to { box-shadow: 0 0 20px rgba(245, 158, 11, 0.5); } }
-        pre { background: #0f172a !important; padding: 1rem; border-radius: 0.5rem; overflow-x: auto; margin: 0.5rem 0; font-size: 0.8rem; border: 1px solid rgba(255,255,255,0.05); }
-        code { font-family: 'Fira Code', monospace; color: #fbbf24; }
+        .active-chat { background: rgba(245, 158, 11, 0.1); border-left: 3px solid #f59e0b; }
     </style>
 </head>
-<body class="min-h-screen flex flex-col md:flex-row">
+<body class="bg-slate-950 text-slate-100 flex flex-col md:flex-row min-h-screen">
 
     <!-- Sidebar -->
-    <aside class="w-full md:w-64 border-r border-white/5 bg-slate-950 flex flex-col h-screen sticky top-0 z-[100]">
+    <aside class="w-full md:w-64 border-r border-white/5 bg-slate-950 flex flex-col md:h-screen sticky top-0">
         <div class="p-4 border-b border-white/5">
-            <button id="new-chat-btn" class="w-full flex items-center justify-center gap-2 bg-amber-600 hover:bg-amber-500 p-3 rounded-xl transition-all text-sm font-bold text-white shadow-lg active:scale-95">
-                <span>+ Novo Chat</span>
+            <button id="sidebar-new-chat" class="w-full flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 border border-white/10 p-3 rounded-xl transition-all text-sm font-semibold text-white">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+                <span>Novo Chat</span>
             </button>
         </div>
-        <div id="history-list" class="flex-grow overflow-y-auto p-2 custom-scrollbar space-y-2">
-            <div id="loading-history" class="p-4 text-center text-slate-500 text-[10px] animate-pulse uppercase tracking-widest">
-                Sincronizando...
-            </div>
-        </div>
-        <div class="p-4 border-t border-white/5 text-[10px] text-slate-500 text-center font-medium tracking-tighter">
-            LAB ID: <span id="display-id" class="opacity-50">---</span>
-        </div>
+        <div id="history-list" class="flex-grow overflow-y-auto p-2 custom-scrollbar space-y-1"></div>
+        <div class="p-4 text-[10px] text-slate-600 text-center border-t border-white/5">Áurea v3.5 Cloud</div>
     </aside>
 
-    <!-- Main -->
-    <div class="flex-grow flex flex-col min-h-screen relative">
-        <header class="h-16 border-b border-white/5 flex items-center justify-between px-6 bg-slate-950/80 backdrop-blur-md sticky top-0 z-50">
-            <div class="flex items-center gap-3">
-                <div class="w-8 h-8 bg-amber-600 rounded-lg flex items-center justify-center font-black text-white shadow-lg ai-glow">Á</div>
-                <h1 class="text-lg font-black bg-gradient-to-r from-amber-400 to-yellow-600 bg-clip-text text-transparent tracking-tight">ÁUREA LAB</h1>
-            </div>
-            <div id="connection-status" class="flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-bold uppercase bg-slate-800 text-slate-400 border border-white/5">
-                <span id="status-dot" class="w-2 h-2 bg-slate-500 rounded-full"></span>
-                <span id="status-text">A ligar...</span>
-            </div>
-        </header>
-
-        <main class="p-4 md:p-8 max-w-4xl mx-auto w-full flex-grow flex flex-col">
-            <div id="chat-output" class="flex-grow space-y-6 mb-8 overflow-y-auto pr-2 custom-scrollbar min-h-[50vh]">
-                <!-- Mensagens aparecerão aqui -->
-            </div>
-
-            <div class="sticky bottom-6">
-                <div id="typing-indicator" class="hidden text-[10px] text-amber-500 animate-pulse mb-2 ml-2 font-bold tracking-widest uppercase">Áurea está a analisar...</div>
-                <div class="glass p-2 rounded-2xl flex gap-2 items-end shadow-2xl border-white/10">
-                    <textarea id="chat-input" class="flex-grow bg-transparent p-3 text-sm focus:outline-none resize-none h-12 max-h-40 custom-scrollbar text-slate-200" placeholder="Luís, pergunta algo sobre química ou código..."></textarea>
-                    <button id="send-btn" class="bg-amber-600 hover:bg-amber-500 p-3 rounded-xl text-white transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
-                    </button>
+    <div class="flex-grow flex flex-col relative">
+        <nav class="w-full border-b border-white/5 bg-slate-950/80 backdrop-blur-md sticky top-0 z-50">
+            <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+                <h1 class="text-xl font-bold bg-gradient-to-r from-amber-400 to-yellow-600 bg-clip-text text-transparent italic">Áurea Lab</h1>
+                <div id="connection-status" class="flex items-center gap-2 glass px-3 py-1 rounded-full text-[10px] uppercase text-slate-400">
+                    <span class="w-2 h-2 bg-slate-600 rounded-full"></span>
+                    <span>Offline</span>
                 </div>
+            </div>
+        </nav>
+
+        <main class="p-4 md:p-6 flex-grow">
+            <div class="max-w-4xl mx-auto">
+                <section class="glass p-4 md:p-6 rounded-2xl flex flex-col h-[600px] shadow-2xl">
+                    <div id="chat-output" class="flex-grow overflow-y-auto mb-4 space-y-4 pr-3 text-sm custom-scrollbar">
+                        <div class="text-slate-500 text-center mt-20 italic">Pronto para começar o laboratório?</div>
+                    </div>
+                   
+                    <div class="pt-4 border-t border-white/10">
+                        <div id="typing-indicator" class="hidden text-[10px] text-amber-500 animate-pulse mb-2 font-bold uppercase">Áurea está a processar no servidor...</div>
+                        <div class="relative flex gap-2">
+                            <textarea id="chat-input" class="flex-grow bg-slate-900 border border-white/5 rounded-xl p-3 text-sm focus:border-amber-500 outline-none transition-all text-white h-14 resize-none" placeholder="Pergunta algo ao teu servidor..."></textarea>
+                            <button id="send-btn" class="bg-amber-600 hover:bg-amber-500 px-5 rounded-xl text-white transition-transform active:scale-95">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                </section>
             </div>
         </main>
     </div>
@@ -72,193 +66,128 @@
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, doc, setDoc, onSnapshot, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Globais do Ambiente Canvas
         const firebaseConfig = JSON.parse(__firebase_config);
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'ia-lab-luis';
-        const apiKey = ""; 
 
-        let currentUser = null;
-        let sessions = [];
+        // DETEÇÃO AUTOMÁTICA DO BACKEND
+        // Se estiveres a correr no Render, ele usa o URL do Render. Se for local, usa localhost.
+        const backendUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+            ? 'http://localhost:3000/api/chat' 
+            : '/api/chat';
+
+        let user = null;
         let currentSessionId = null;
+        let chatHistory = [];
+        let sessions = [];
 
-        // Função para atualizar UI de status
-        function updateStatus(text, color) {
-            const dot = document.getElementById('status-dot');
-            const label = document.getElementById('status-text');
-            if (dot && label) {
-                dot.className = `w-2 h-2 rounded-full bg-${color}-500 ${color === 'emerald' ? 'animate-pulse' : ''}`;
-                label.innerText = text;
-                label.className = `text-${color}-400`;
-            }
+        async function initAuth() {
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                await signInWithCustomToken(auth, __initial_auth_token);
+            } else { await signInAnonymously(auth); }
         }
+        initAuth();
 
-        // 1. Ciclo de Autenticação Robusto (Regra 3)
-        async function startAuth() {
-            updateStatus('A autenticar...', 'amber');
-            try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
-            } catch (err) {
-                console.error("Auth Error:", err);
-                updateStatus('Erro de Ligação', 'red');
-                // Tenta fallback anónimo se o token falhar
-                try { await signInAnonymously(auth); } catch(e) {}
-            }
-        }
-
-        onAuthStateChanged(auth, (user) => {
+        onAuthStateChanged(auth, (u) => {
+            user = u;
             if (user) {
-                currentUser = user;
-                document.getElementById('display-id').innerText = user.uid.substring(0, 8);
-                updateStatus('Conectado', 'emerald');
-                setupDatabase();
-            } else {
-                updateStatus('Desligado', 'slate');
-                startAuth(); // Tenta reautenticar
+                document.getElementById('connection-status').innerHTML = `<span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span><span class="text-emerald-400">Server Link Active</span>`;
+                setupFirestoreListeners();
             }
         });
 
-        // 2. Setup do Firestore (Regras 1 e 2)
-        function setupDatabase() {
-            if (!currentUser) return;
-            const path = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'sessions');
-            
-            onSnapshot(path, (snapshot) => {
-                document.getElementById('loading-history')?.remove();
-                sessions = snapshot.docs.map(d => ({ id: d.id, ...d.data() }))
+        function setupFirestoreListeners() {
+            const sessionsPath = collection(db, 'artifacts', appId, 'users', user.uid, 'sessions');
+            onSnapshot(sessionsPath, (snapshot) => {
+                sessions = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
                     .sort((a, b) => (b.updatedAt?.seconds || 0) - (a.updatedAt?.seconds || 0));
-                
-                renderSidebar();
-
-                if (!currentSessionId && sessions.length > 0) {
-                    loadChat(sessions[0].id);
-                } else if (!currentSessionId) {
-                    createNewChat();
-                }
-            }, (error) => {
-                console.error("Firestore Error:", error);
-                updateStatus('Erro Database', 'red');
+                renderHistory();
+                if (!currentSessionId && sessions.length > 0) loadSession(sessions[0].id);
+                else if (sessions.length === 0) startNewChat();
             });
         }
 
-        function renderSidebar() {
+        function renderHistory() {
             const list = document.getElementById('history-list');
             list.innerHTML = '';
             sessions.forEach(s => {
-                const btn = document.createElement('button');
-                const isActive = s.id === currentSessionId;
-                btn.className = `w-full text-left p-3 rounded-xl text-xs truncate transition-all border ${isActive ? 'bg-amber-600/10 border-amber-500/30 text-amber-500 font-bold' : 'text-slate-400 border-transparent hover:bg-white/5'}`;
-                btn.innerText = s.title || 'Conversa de Química';
-                btn.onclick = () => loadChat(s.id);
-                list.appendChild(btn);
+                const div = document.createElement('div');
+                div.className = `p-3 rounded-lg cursor-pointer text-xs transition-all border border-transparent ${s.id === currentSessionId ? 'active-chat font-bold' : 'hover:bg-white/5'}`;
+                div.onclick = () => loadSession(s.id);
+                div.innerText = s.title || 'Nova Conversa';
+                list.appendChild(div);
             });
         }
 
-        function loadChat(id) {
+        function loadSession(id) {
             currentSessionId = id;
             const session = sessions.find(s => s.id === id);
-            const out = document.getElementById('chat-output');
-            out.innerHTML = '';
-            
-            if (session && session.history && session.history.length > 0) {
-                session.history.forEach(m => appendUI(m.role === 'user' ? 'user' : 'ai', m.parts[0].text));
-            } else {
-                out.innerHTML = `<div class="text-center py-20 text-slate-600 text-xs uppercase tracking-widest">Inicia o desafio, Luís!</div>`;
+            if (session) {
+                chatHistory = session.history || [];
+                const out = document.getElementById('chat-output');
+                out.innerHTML = '';
+                chatHistory.forEach(msg => appendChat(msg.role === 'user' ? 'user' : 'assistant', msg.parts[0].text));
+                renderHistory();
             }
-            renderSidebar();
         }
 
-        async function createNewChat() {
-            if (!currentUser) return;
-            const id = Date.now().toString();
-            const ref = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'sessions', id);
-            try {
-                await setDoc(ref, {
-                    title: 'Novo Experimento',
-                    history: [],
-                    updatedAt: serverTimestamp()
-                });
-                currentSessionId = id;
-            } catch (e) { console.error("Create Chat Error:", e); }
+        async function startNewChat() {
+            currentSessionId = Date.now().toString();
+            const sessionDoc = doc(db, 'artifacts', appId, 'users', user.uid, 'sessions', currentSessionId);
+            await setDoc(sessionDoc, { title: 'Nova Conversa', history: [], updatedAt: serverTimestamp() });
         }
 
-        function appendUI(role, text) {
+        function appendChat(role, text) {
             const out = document.getElementById('chat-output');
-            const isUser = role === 'user';
-            const msg = document.createElement('div');
-            msg.className = `flex ${isUser ? 'justify-end' : 'justify-start'} mb-2`;
-            
-            const html = marked.parse(text);
-            
-            msg.innerHTML = `
-                <div class="max-w-[85%] p-4 rounded-2xl shadow-sm ${isUser ? 'bg-amber-600 text-white' : 'bg-slate-900 border border-white/5 text-slate-200'}">
-                    <div class="prose prose-invert text-sm leading-relaxed">${html}</div>
-                </div>
-            `;
-            out.appendChild(msg);
+            const div = document.createElement('div');
+            const isU = role === 'user';
+            div.className = `flex ${isU ? 'justify-end' : 'justify-start'} w-full mb-4`;
+            div.innerHTML = `<div class="max-w-[85%] p-4 rounded-2xl ${isU ? 'bg-amber-600/20 text-amber-100' : 'bg-slate-900 text-slate-200 border border-white/5'} text-sm">${marked.parse(text)}</div>`;
+            out.appendChild(div);
             out.scrollTop = out.scrollHeight;
         }
 
         async function handleSend() {
             const input = document.getElementById('chat-input');
             const val = input.value.trim();
-            if (!val || !currentUser || !currentSessionId) return;
+            if (!val || !user || !currentSessionId) return;
 
             input.value = '';
-            appendUI('user', val);
-            
-            const session = sessions.find(s => s.id === currentSessionId) || { history: [] };
-            const history = [...(session.history || [])];
-            history.push({ role: 'user', parts: [{ text: val }] });
-
+            appendChat('user', val);
             document.getElementById('typing-indicator').classList.remove('hidden');
+            chatHistory.push({ role: "user", parts: [{ text: val }] });
 
             try {
-                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+                const response = await fetch(backendUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: history,
-                        systemInstruction: { parts: [{ text: "És a Áurea, a IA assistente do Luís. És especialista em química e tecnologia. Responde de forma clara e encorajadora. Se ele pedir um código, usa formatação markdown." }] }
-                    })
+                    body: JSON.stringify({ contents: chatHistory })
                 });
-
-                const data = await res.json();
+               
+                const data = await response.json();
                 const reply = data.candidates[0].content.parts[0].text;
                 
-                appendUI('ai', reply);
-                history.push({ role: 'model', parts: [{ text: reply }] });
+                chatHistory.push({ role: "model", parts: [{ text: reply }] });
+                appendChat('assistant', reply);
 
-                const ref = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'sessions', currentSessionId);
-                await updateDoc(ref, {
-                    history: history,
+                const sessionDoc = doc(db, 'artifacts', appId, 'users', user.uid, 'sessions', currentSessionId);
+                await updateDoc(sessionDoc, {
+                    history: chatHistory,
                     updatedAt: serverTimestamp(),
-                    title: history.length <= 2 ? val.substring(0, 25) : session.title
+                    title: chatHistory.length <= 2 ? val.slice(0, 20) : sessions.find(s => s.id === currentSessionId).title
                 });
-
-            } catch (err) {
-                console.error("API Error:", err);
-                appendUI('ai', "⚠️ Houve um problema na rede. Tenta novamente.");
+            } catch (e) {
+                appendChat('assistant', "❌ Erro ao ligar ao servidor. Verifica o Render.");
             } finally {
                 document.getElementById('typing-indicator').classList.add('hidden');
             }
         }
 
-        // Eventos
         document.getElementById('send-btn').onclick = handleSend;
-        document.getElementById('chat-input').onkeydown = (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
-        };
-        document.getElementById('new-chat-btn').onclick = createNewChat;
-
-        // Início imediato da autenticação
-        startAuth();
+        document.getElementById('chat-input').onkeydown = e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } };
+        document.getElementById('sidebar-new-chat').onclick = startNewChat;
     </script>
 </body>
 </html>
