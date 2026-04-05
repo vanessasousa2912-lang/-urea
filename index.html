@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mining Masters - Godly Upgrades</title>
+    <title>Mining Masters - Global Edition</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
@@ -83,19 +83,6 @@
         .prestige-btn { background: linear-gradient(135deg, #7c3aed, #4f46e5); transition: all 0.3s; }
         .prestige-btn:hover:not(:disabled) { filter: brightness(1.2); transform: translateY(-2px); }
 
-        .skip-btn {
-            background: #334155;
-            transition: all 0.2s;
-        }
-        .skip-btn:not(:disabled):hover {
-            background: #475569;
-            color: #ef4444;
-        }
-        .skip-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
         .rainbow-text {
             animation: rainbow 3s linear infinite;
         }
@@ -108,6 +95,8 @@
             100% { color: #ff00ff; }
         }
 
+        .modal-blur { backdrop-filter: blur(8px); }
+
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #0f172a; }
         ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
@@ -116,6 +105,26 @@
 <body class="p-2 md:p-6">
 
     <div class="max-w-6xl mx-auto">
+        <!-- Header / Perfil / Idioma -->
+        <div class="flex flex-col md:flex-row items-center justify-between mb-6 bg-slate-800/50 p-4 rounded-2xl border border-slate-700 gap-4">
+            <div class="flex items-center gap-4">
+                <div id="player-avatar" class="w-12 h-12 bg-slate-700 rounded-full flex items-center justify-center text-2xl border-2 border-blue-500 shadow-lg shadow-blue-500/20">👤</div>
+                <div>
+                    <h1 id="player-name" class="font-bold text-slate-100 leading-tight">Minerador</h1>
+                    <div class="flex items-center gap-2">
+                        <span id="status-label" class="text-[9px] text-blue-400 font-bold uppercase tracking-widest">Status: Ativo</span>
+                        <button onclick="resetGameData()" class="text-[9px] text-slate-500 hover:text-red-400 transition uppercase font-bold">[Reset]</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex gap-2 bg-slate-900 p-1 rounded-xl border border-slate-700">
+                <button onclick="setLanguage('pt')" class="px-3 py-1 text-sm hover:bg-slate-800 rounded-lg transition">🇧🇷</button>
+                <button onclick="setLanguage('en')" class="px-3 py-1 text-sm hover:bg-slate-800 rounded-lg transition">🇺🇸</button>
+                <button onclick="setLanguage('es')" class="px-3 py-1 text-sm hover:bg-slate-800 rounded-lg transition">🇲🇽</button>
+            </div>
+        </div>
+
         <!-- Dashboard -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <div class="bg-slate-800 p-4 rounded-2xl border-b-4 border-slate-950 flex items-center justify-between">
@@ -151,7 +160,7 @@
                         <div id="equipped-icon" class="text-xl">✋</div>
                         <div>
                             <p data-i18n="equipped" class="text-[10px] text-slate-500 leading-none">EQUIPADO</p>
-                            <span id="equipped-name" class="text-xs font-bold text-yellow-500 uppercase">Mãos Nuas</span>
+                            <span id="equipped-name" class="text-xs font-bold text-yellow-500 uppercase">---</span>
                         </div>
                     </div>
 
@@ -168,7 +177,7 @@
                         </div>
                     </div>
 
-                    <button id="skip-btn" onclick="skipItem()" class="mt-4 skip-btn px-6 py-2 rounded-full border border-slate-600 text-[10px] font-black uppercase tracking-widest flex items-center gap-2 group">
+                    <button id="skip-btn" onclick="skipItem()" class="mt-4 skip-btn bg-slate-700 hover:bg-slate-600 px-6 py-2 rounded-full border border-slate-600 text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition">
                         <span id="skip-icon">⏭️</span>
                         <span data-i18n="skip_item">Pular Item</span>
                         <span id="skip-timer" class="hidden text-red-500 ml-1">15s</span>
@@ -210,6 +219,24 @@
         <div id="game-log" class="mt-6 text-xs text-slate-500 h-16 overflow-hidden bg-slate-950 bg-opacity-50 p-3 rounded-xl italic border border-slate-800"></div>
     </div>
 
+    <!-- Modal de Criação de Perfil -->
+    <div id="profile-modal" class="fixed inset-0 bg-slate-950/90 hidden z-[200] flex items-center justify-center p-4 modal-blur">
+        <div class="bg-slate-800 max-w-sm w-full rounded-3xl p-8 border-4 border-blue-600 shadow-2xl">
+            <h2 id="profile-title" class="text-xl font-black text-center text-blue-400 mb-6 uppercase tracking-tighter">CRIAR IDENTIDADE</h2>
+            <div class="space-y-6">
+                <div>
+                    <label id="label-name" class="text-[10px] font-bold text-slate-500 uppercase ml-1">Seu Nome de Minerador</label>
+                    <input id="input-name" type="text" maxlength="15" placeholder="..." class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl px-4 py-3 text-slate-100 focus:border-blue-500 outline-none transition mt-1">
+                </div>
+                <div>
+                    <label id="label-avatar" class="text-[10px] font-bold text-slate-500 uppercase ml-1">Escolha seu Avatar</label>
+                    <div id="avatar-selector" class="grid grid-cols-4 gap-2 mt-2"></div>
+                </div>
+                <button onclick="saveInitialProfile()" id="btn-start" class="w-full py-4 rounded-xl bg-blue-600 hover:bg-blue-500 font-bold uppercase text-sm shadow-lg shadow-blue-900/40 transition">COMEÇAR JORNADA</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal de Prestígio -->
     <div id="prestige-modal" class="fixed inset-0 bg-black/80 hidden z-[100] flex items-center justify-center p-4">
         <div class="bg-slate-800 max-w-md w-full rounded-3xl p-8 border-4 border-purple-600">
@@ -233,76 +260,99 @@
             pt: {
                 gold_total: "Ouro Total", auto_mining: "Auto-Mineração", prestige: "Prestígio", rank_up: "Rank Up", equipped: "Equipado", 
                 luck: "Sorte", resistance: "Resistência", toolbox: "Caixa de Ferramentas", tab_equip: "Equipamentos", tab_auto: "Automação", 
-                tab_upgrades: "Upgrades", prestige_title: "Avanço de Rank", prestige_desc: "Reinicia o progresso por poder permanente.",
+                tab_upgrades: "Upgrades", prestige_title: "Avanço de Rank", prestige_desc: "Reseta o progresso por poder permanente.",
                 prestige_cost: "Custo:", cancel: "Cancelar", acquired: "Adquirido", buy: "Comprar", damage: "Dano",
-                luck_upgrade_name: "Amuleto da Sorte", luck_upgrade_desc: "Aumenta chance de raros.", level: "Nível",
+                luck_upgrade_name: "Amuleto da Sorte", luck_upgrade_desc: "Mais minérios raros.", level: "Nível",
                 msg_break: "Quebrou {0}! (+{1} Ouro)", msg_bought: "Comprou {0}!", msg_prestige: "RANK UP! Nível {0}",
-                skip_item: "Pular Item", msg_skip: "Item descartado pelo scanner.",
-                god_luck_name: "Sorte de 1 em 100", god_luck_desc: "Multiplica a sorte total por 100x!"
+                skip_item: "Pular Item", msg_skip: "Scanner ativado: Item descartado.",
+                god_luck_name: "Sorte de 1 em 100", god_luck_desc: "Multiplica sua sorte por 100x!",
+                profile_title: "CRIAR IDENTIDADE", label_name: "Seu Nome", label_avatar: "Avatar", btn_start: "COMEÇAR JORNADA",
+                status_active: "Status: Ativo"
+            },
+            en: {
+                gold_total: "Total Gold", auto_mining: "Auto-Mining", prestige: "Prestige", rank_up: "Rank Up", equipped: "Equipped", 
+                luck: "Luck", resistance: "Durability", toolbox: "Toolbox", tab_equip: "Equipment", tab_auto: "Automation", 
+                tab_upgrades: "Upgrades", prestige_title: "Rank Advance", prestige_desc: "Reset progress for permanent power bonus.",
+                prestige_cost: "Cost:", cancel: "Cancel", acquired: "Owned", buy: "Buy", damage: "Damage",
+                luck_upgrade_name: "Lucky Charm", luck_upgrade_desc: "Better rare ore spawns.", level: "Level",
+                msg_break: "Broke {0}! (+{1} Gold)", msg_bought: "Bought {0}!", msg_prestige: "RANK UP! Level {0}",
+                skip_item: "Skip Item", msg_skip: "Scanner active: Item discarded.",
+                god_luck_name: "1 in 100 Luck", god_luck_desc: "Multiplies total luck by 100x!",
+                profile_title: "CREATE IDENTITY", label_name: "Your Name", label_avatar: "Avatar", btn_start: "START JOURNEY",
+                status_active: "Status: Active"
+            },
+            es: {
+                gold_total: "Oro Total", auto_mining: "Auto-Minería", prestige: "Prestigio", rank_up: "Subir Rango", equipped: "Equipado", 
+                luck: "Suerte", resistance: "Resistencia", toolbox: "Caja de Herramientas", tab_equip: "Equipo", tab_auto: "Automatización", 
+                tab_upgrades: "Mejoras", prestige_title: "Avance de Rango", prestige_desc: "Reinicia el progreso por poder permanente.",
+                prestige_cost: "Costo:", cancel: "Cancelar", acquired: "Adquirido", buy: "Comprar", damage: "Daño",
+                luck_upgrade_name: "Amuleto de Suerte", luck_upgrade_desc: "Más minerales raros.", level: "Nivel",
+                msg_break: "¡Rompiste {0}! (+{1} Oro)", msg_bought: "¡Compraste {0}!", msg_prestige: "¡RANGO UP! Nivel {0}",
+                skip_item: "Saltar Item", msg_skip: "Escáner activo: Item descartado.",
+                god_luck_name: "Suerte 1 en 100", god_luck_desc: "¡Multiplica tu suerte por 100x!",
+                profile_title: "CREAR IDENTIDAD", label_name: "Tu Nombre", label_avatar: "Avatar", btn_start: "EMPEZAR VIAJE",
+                status_active: "Estado: Activo"
             }
         };
 
+        const AVATARS = ["👤", "👨‍🚀", "👷", "🤖", "🦊", "😎", "👾", "🐉", "🧛", "🧟", "🧙", "🐱"];
+
         const TOOLS = [
-            { id: 0, name: {pt:"Mãos Nuas"}, damage: 2, icon: "✋", cost: 0, owned: true, elite: false },
-            { id: 1, name: {pt:"Picareta de Madeira"}, damage: 12, icon: "⛏️", cost: 50, owned: false, elite: false },
-            { id: 2, name: {pt:"Picareta de Pedra"}, damage: 35, icon: "🔨", cost: 250, owned: false, elite: false },
-            { id: 3, name: {pt:"Picareta de Ferro"}, damage: 95, icon: "🔧", cost: 1000, owned: false, elite: false },
-            { id: 4, name: {pt:"Picareta de Ouro"}, damage: 250, icon: "✨", cost: 3500, owned: false, elite: false },
-            { id: 5, name: {pt:"Picareta de Diamante"}, damage: 650, icon: "💎", cost: 12000, owned: false, elite: false },
-            { id: 6, name: {pt:"Broca de Plasma"}, damage: 1800, icon: "🔥", cost: 45000, owned: false, elite: false },
-            { id: 7, name: {pt:"Lâmina Vibratória"}, damage: 6000, icon: "⚔️", cost: 200000, owned: false, elite: true, reqRank: 1 },
-            { id: 8, name: {pt:"Desintegrador"}, damage: 25000, icon: "⚛️", cost: 800000, owned: false, elite: true, reqRank: 2 },
-            { id: 9, name: {pt:"Fissurador Galáctico"}, damage: 100000, icon: "🌀", cost: 3500000, owned: false, elite: true, reqRank: 3 },
-            { id: 10, name: {pt:"O Infinito"}, damage: 99999999999, icon: "♾️", cost: 500000000, owned: false, elite: true, reqRank: 5 }
+            { id: 0, name: {pt:"Mãos Nuas", en:"Bare Hands", es:"Manos Nuas"}, damage: 2, icon: "✋", cost: 0, owned: true, elite: false },
+            { id: 1, name: {pt:"Picareta de Madeira", en:"Wooden Pickaxe", es:"Pico de Madera"}, damage: 12, icon: "⛏️", cost: 50, owned: false, elite: false },
+            { id: 2, name: {pt:"Picareta de Pedra", en:"Stone Pickaxe", es:"Pico de Piedra"}, damage: 35, icon: "🔨", cost: 250, owned: false, elite: false },
+            { id: 3, name: {pt:"Picareta de Ferro", en:"Iron Pickaxe", es:"Pico de Hierro"}, damage: 95, icon: "🔧", cost: 1000, owned: false, elite: false },
+            { id: 4, name: {pt:"Picareta de Ouro", en:"Golden Pickaxe", es:"Pico de Oro"}, damage: 250, icon: "✨", cost: 3500, owned: false, elite: false },
+            { id: 5, name: {pt:"Picareta de Diamante", en:"Diamond Pickaxe", es:"Pico de Diamante"}, damage: 650, icon: "💎", cost: 12000, owned: false, elite: false },
+            { id: 6, name: {pt:"Broca de Plasma", en:"Plasma Drill", es:"Taladro Plasma"}, damage: 1800, icon: "🔥", cost: 45000, owned: false, elite: false },
+            { id: 7, name: {pt:"Lâmina Vibratória", en:"Vibroblade", es:"Hoja Vibrante"}, damage: 6000, icon: "⚔️", cost: 200000, owned: false, elite: true, reqRank: 1 },
+            { id: 8, name: {pt:"Desintegrador", en:"Disintegrator", es:"Desintegrador"}, damage: 25000, icon: "⚛️", cost: 800000, owned: false, elite: true, reqRank: 2 },
+            { id: 9, name: {pt:"Fissurador Galáctico", en:"Galactic Splitter", es:"Fisurador Galáctico"}, damage: 100000, icon: "🌀", cost: 3500000, owned: false, elite: true, reqRank: 3 },
+            { id: 10, name: {pt:"O Infinito", en:"The Infinity", es:"El Infinito"}, damage: 99999999999, icon: "♾️", cost: 500000000, owned: false, elite: true, reqRank: 5 }
         ];
 
         const AUTO_MINERS = [
-            { id: 0, name: {pt:"Robô Clicker"}, dps: 5, cost: 150, owned: 0, icon: "🤖" },
-            { id: 1, name: {pt:"Equipe Mineira"}, dps: 70, cost: 2000, owned: 0, icon: "👥" },
-            { id: 2, name: {pt:"Drone Orbital"}, dps: 450, cost: 20000, owned: 0, icon: "🛰️" },
-            { id: 3, name: {pt:"Laser Planetário"}, dps: 2500, cost: 150000, owned: 0, icon: "📡" },
-            { id: 4, name: {pt:"Fábrica Estelar"}, dps: 15000, cost: 1000000, owned: 0, icon: "🏭" },
-            { id: 5, name: {pt:"Buraco Negro Estável"}, dps: 1000000, cost: 100000000, owned: 0, icon: "🕳️" },
-            { id: 6, name: {pt:"Desintegrador de Tudo"}, dps: 1000000000, cost: 5000000000, owned: 0, icon: "🌌", reqRank: 8 }
+            { id: 0, name: {pt:"Robô Clicker", en:"Clicker Bot", es:"Robot Clicker"}, dps: 5, cost: 150, owned: 0, icon: "🤖" },
+            { id: 1, name: {pt:"Equipe Mineira", en:"Mining Team", es:"Equipo Minero"}, dps: 70, cost: 2000, owned: 0, icon: "👥" },
+            { id: 2, name: {pt:"Drone Orbital", en:"Orbital Drone", es:"Dron Orbital"}, dps: 450, cost: 20000, owned: 0, icon: "🛰️" },
+            { id: 3, name: {pt:"Laser Planetário", en:"Planetary Laser", es:"Láser Planetario"}, dps: 2500, cost: 150000, owned: 0, icon: "📡" },
+            { id: 4, name: {pt:"Fábrica Estelar", en:"Star Factory", es:"Fábrica Estelar"}, dps: 15000, cost: 1000000, owned: 0, icon: "🏭" },
+            { id: 5, name: {pt:"Buraco Negro", en:"Black Hole", es:"Agujero Negro"}, dps: 1000000, cost: 100000000, owned: 0, icon: "🕳️" },
+            { id: 6, name: {pt:"Desintegrador de Tudo", en:"All-Disintegrator", es:"Desintegrador de Todo"}, dps: 1000000000, cost: 5000000000, owned: 0, icon: "🌌", reqRank: 8 }
         ];
 
         const NODES = [
-            { id:0, name: {pt:"Poeira Estelar"}, hp: 40, reward: 5, color: "#94a3b8", rarity: 1 },
-            { id:1, name: {pt:"Rocha Comum"}, hp: 80, reward: 12, color: "#64748b", rarity: 1 },
-            { id:2, name: {pt:"Minério de Ferro"}, hp: 200, reward: 35, color: "#cbd5e1", rarity: 1 },
-            { id:3, name: {pt:"Cristal de Quartzo"}, hp: 450, reward: 100, color: "#f8fafc", rarity: 2 },
-            { id:4, name: {pt:"Pepita de Ouro"}, hp: 1200, reward: 300, color: "#fbbf24", rarity: 2 },
-            { id:5, name: {pt:"Esmeralda"}, hp: 3000, reward: 800, color: "#10b981", rarity: 3 },
-            { id:6, name: {pt:"Rubi Escarlate"}, hp: 7500, reward: 2200, color: "#ef4444", rarity: 4 },
-            { id:7, name: {pt:"Safira Real"}, hp: 15000, reward: 5000, color: "#3b82f6", rarity: 5 },
-            { id:8, name: {pt:"Ametista Profunda"}, hp: 32000, reward: 12000, color: "#a855f7", rarity: 6 },
-            { id:9, name: {pt:"Pedra Solar"}, hp: 70000, reward: 28000, color: "#f97316", rarity: 7 },
-            { id:10, name: {pt:"Pedra Lunar"}, hp: 150000, reward: 65000, color: "#e2e8f0", rarity: 8 },
-            { id:11, name: {pt:"Obsidiana Estelar"}, hp: 350000, reward: 150000, color: "#1e293b", rarity: 9 },
-            { id:12, name: {pt:"Minério de Mithril"}, hp: 800000, reward: 400000, color: "#99f6e4", rarity: 10 },
-            { id:13, name: {pt:"Cristal de Adamantino"}, hp: 2000000, reward: 1000000, color: "#fca5a5", rarity: 11 },
-            { id:14, name: {pt:"Eletro-Quartzo"}, hp: 5000000, reward: 2800000, color: "#7dd3fc", rarity: 12 },
-            { id:15, name: {pt:"Núcleo Vulcânico"}, hp: 12000000, reward: 7000000, color: "#dc2626", rarity: 13 },
-            { id:16, name: {pt:"Lágrima de Netuno"}, hp: 30000000, reward: 18000000, color: "#1d4ed8", rarity: 14 },
-            { id:17, name: {pt:"Minério de Estrela Neutrons"}, hp: 80000000, reward: 50000000, color: "#ffffff", rarity: 15 },
-            { id:18, name: {pt:"Antimatéria"}, hp: 250000000, reward: 150000000, color: "#4c1d95", rarity: 16 },
-            { id:19, name: {pt:"Matéria Escura"}, hp: 800000000, reward: 500000000, color: "#000000", rarity: 17 },
-            { id:20, name: {pt:"Eco do Big Bang"}, hp: 2500000000, reward: 1800000000, color: "#fb923c", rarity: 18 },
-            { id:21, name: {pt:"Fragmento de Tempo"}, hp: 10000000000, reward: 7500000000, color: "#60a5fa", rarity: 19 },
-            { id:22, name: {pt:"Singularidade"}, hp: 50000000000, reward: 40000000000, color: "#000000", rarity: 20 },
-            { id:23, name: {pt:"Imortalidade"}, hp: 1000000000000, reward: 100000000000, color: "rainbow", rarity: 50 }
+            { id:0, name: {pt:"Poeira Estelar", en:"Stardust", es:"Polvo Estelar"}, hp: 40, reward: 5, color: "#94a3b8", rarity: 1 },
+            { id:1, name: {pt:"Rocha Comum", en:"Common Rock", es:"Roca Común"}, hp: 80, reward: 12, color: "#64748b", rarity: 1 },
+            { id:2, name: {pt:"Ferro", en:"Iron", es:"Hierro"}, hp: 200, reward: 35, color: "#cbd5e1", rarity: 1 },
+            { id:3, name: {pt:"Quartzo", en:"Quartz", es:"Cuarzo"}, hp: 450, reward: 100, color: "#f8fafc", rarity: 2 },
+            { id:4, name: {pt:"Ouro", en:"Gold", es:"Oro"}, hp: 1200, reward: 300, color: "#fbbf24", rarity: 2 },
+            { id:5, name: {pt:"Esmeralda", en:"Emerald", es:"Esmeralda"}, hp: 3000, reward: 800, color: "#10b981", rarity: 3 },
+            { id:6, name: {pt:"Rubi", en:"Ruby", es:"Rubí"}, hp: 7500, reward: 2200, color: "#ef4444", rarity: 4 },
+            { id:7, name: {pt:"Safira", en:"Sapphire", es:"Zafiro"}, hp: 15000, reward: 5000, color: "#3b82f6", rarity: 5 },
+            { id:23, name: {pt:"Imortalidade", en:"Immortality", es:"Inmortalidad"}, hp: 1000000000000, reward: 100000000000, color: "rainbow", rarity: 50 }
         ];
 
         let state = {
+            profile: { name: "Minerador", avatar: "👤" },
             gold: 0, prestigeRank: 0, bonusMult: 1.0, luck: 1.0, luckLevel: 0, godLuckOwned: false, lang: 'pt',
             activeToolIdx: 0, currentNodeIdx: 0, currentHP: 40, currentTab: 'tools', skipCooldown: false
         };
 
+        let selectedAvatar = "👤";
+
         function init() {
-            setLanguage('pt');
-            startAutoMiners();
-            spawnNextNode();
-            refreshAll();
+            loadGame();
+            setLanguage(state.lang);
+            setupAvatarSelector();
+            
+            if (!localStorage.getItem('mining_masters_v2')) {
+                document.getElementById('profile-modal').classList.remove('hidden');
+            } else {
+                startAutoMiners();
+                spawnNextNode();
+                refreshAll();
+            }
         }
 
         function setLanguage(l) {
@@ -311,7 +361,78 @@
                 const key = el.getAttribute('data-i18n');
                 el.innerText = I18N[l][key] || key;
             });
+            // Update Profile labels
+            document.getElementById('profile-title').innerText = I18N[l].profile_title;
+            document.getElementById('label-name').innerText = I18N[l].label_name;
+            document.getElementById('label-avatar').innerText = I18N[l].label_avatar;
+            document.getElementById('btn-start').innerText = I18N[l].btn_start;
+            document.getElementById('status-label').innerText = I18N[l].status_active;
+
             refreshAll();
+            saveGame();
+        }
+
+        function setupAvatarSelector() {
+            const container = document.getElementById('avatar-selector');
+            AVATARS.forEach(av => {
+                const btn = document.createElement('button');
+                btn.className = "avatar-option w-full aspect-square bg-slate-900 rounded-xl flex items-center justify-center text-xl border-2 border-transparent hover:border-blue-400 transition";
+                btn.innerText = av;
+                btn.onclick = () => {
+                    document.querySelectorAll('.avatar-option').forEach(el => el.classList.remove('border-blue-500', 'bg-blue-900/20'));
+                    btn.classList.add('border-blue-500', 'bg-blue-900/20');
+                    selectedAvatar = av;
+                };
+                container.appendChild(btn);
+            });
+        }
+
+        function saveInitialProfile() {
+            const nameInput = document.getElementById('input-name').value.trim();
+            if (nameInput.length < 2) return;
+            state.profile.name = nameInput;
+            state.profile.avatar = selectedAvatar;
+            document.getElementById('profile-modal').classList.add('hidden');
+            saveGame();
+            startAutoMiners();
+            spawnNextNode();
+            refreshAll();
+        }
+
+        function saveGame() {
+            const saveData = {
+                profile: state.profile, gold: state.gold, prestigeRank: state.prestigeRank,
+                bonusMult: state.bonusMult, luck: state.luck, luckLevel: state.luckLevel,
+                godLuckOwned: state.godLuckOwned, activeToolIdx: state.activeToolIdx,
+                toolsOwned: TOOLS.map(t => t.owned), autoOwned: AUTO_MINERS.map(m => m.owned),
+                lang: state.lang
+            };
+            localStorage.setItem('mining_masters_v2', JSON.stringify(saveData));
+        }
+
+        function loadGame() {
+            const saved = localStorage.getItem('mining_masters_v2');
+            if (saved) {
+                const data = JSON.parse(saved);
+                state.profile = data.profile || state.profile;
+                state.gold = data.gold;
+                state.prestigeRank = data.prestigeRank;
+                state.bonusMult = data.bonusMult;
+                state.luck = data.luck;
+                state.luckLevel = data.luckLevel;
+                state.godLuckOwned = data.godLuckOwned;
+                state.activeToolIdx = data.activeToolIdx;
+                state.lang = data.lang || 'pt';
+                if (data.toolsOwned) data.toolsOwned.forEach((owned, i) => { if(TOOLS[i]) TOOLS[i].owned = owned; });
+                if (data.autoOwned) data.autoOwned.forEach((qtd, i) => { if(AUTO_MINERS[i]) AUTO_MINERS[i].owned = qtd; });
+            }
+        }
+
+        function resetGameData() {
+            if (confirm("Confirm Reset?")) {
+                localStorage.removeItem('mining_masters_v2');
+                location.reload();
+            }
         }
 
         document.getElementById('resource-node').addEventListener('mousedown', (e) => {
@@ -329,10 +450,8 @@
             state.skipCooldown = true;
             const btn = document.getElementById('skip-btn');
             const timerEl = document.getElementById('skip-timer');
-            const icon = document.getElementById('skip-icon');
             btn.disabled = true;
             timerEl.classList.remove('hidden');
-            icon.innerText = "⏳";
             let timeLeft = 15;
             const interval = setInterval(() => {
                 timeLeft--;
@@ -342,19 +461,16 @@
                     state.skipCooldown = false;
                     btn.disabled = false;
                     timerEl.classList.add('hidden');
-                    icon.innerText = "⏭️";
                 }
             }, 1000);
         }
 
         function spawnNextNode() {
-            const currentLuck = state.godLuckOwned ? (state.luck * 100) : state.luck;
-            const luckBonus = Math.floor(currentLuck / 2);
-            // Máximo de raridade aumenta com rank e sorte
-            const maxRarity = Math.min(100, (state.prestigeRank * 2) + 1 + luckBonus);
-            const possibleNodes = NODES.filter(n => n.rarity <= maxRarity);
-            const roll = Math.floor(Math.random() * possibleNodes.length);
-            state.currentNodeIdx = NODES.findIndex(n => n.id === possibleNodes[roll].id);
+            const curLuck = state.godLuckOwned ? (state.luck * 100) : state.luck;
+            const maxRar = Math.min(100, (state.prestigeRank * 2) + 1 + Math.floor(curLuck/2));
+            const possible = NODES.filter(n => n.rarity <= maxRar);
+            const roll = Math.floor(Math.random() * possible.length);
+            state.currentNodeIdx = NODES.findIndex(n => n.id === possible[roll].id);
             state.currentHP = NODES[state.currentNodeIdx].hp;
         }
 
@@ -363,10 +479,11 @@
             if (x && y) createFloatingText(x, y, `-${formatNumber(amount)}`, 'text-yellow-400');
             if (state.currentHP <= 0) {
                 const node = NODES[state.currentNodeIdx];
-                const reward = node.reward * state.bonusMult;
-                state.gold += reward;
-                addLog(I18N[state.lang].msg_break.replace("{0}", node.name[state.lang]).replace("{1}", formatNumber(reward)));
+                const rew = node.reward * state.bonusMult;
+                state.gold += rew;
+                addLog(I18N[state.lang].msg_break.replace("{0}", node.name[state.lang]).replace("{1}", formatNumber(rew)));
                 spawnNextNode();
+                saveGame();
             }
             updateUI();
         }
@@ -379,6 +496,7 @@
                 document.getElementById('auto-display').innerText = formatNumber(dps * state.bonusMult) + " / seg";
                 document.getElementById('gold-display').innerText = formatNumber(state.gold);
             }, 100);
+            setInterval(saveGame, 10000);
         }
 
         function switchTab(t) {
@@ -410,34 +528,17 @@
                     container.innerHTML += `<div class="p-3 rounded-xl border-2 border-slate-700 bg-slate-800 flex justify-between items-center"><div class="flex items-center gap-3"><span class="text-2xl">${m.icon}</span><div><h4 class="font-bold text-xs">${m.name[state.lang]}</h4><p class="text-[9px] text-slate-500">DPS: +${formatNumber(m.dps)} | Qtd: ${m.owned}</p></div></div><button onclick="buyAuto(${i})" class="bg-green-700 px-3 py-1 rounded-lg text-[10px] font-bold">${formatNumber(cost)}</button></div>`;
                 });
             } else {
-                // Sorte Comum
                 const luckCost = Math.floor(500 * Math.pow(2.5, state.luckLevel));
                 container.innerHTML += `<div class="p-4 rounded-xl border-2 border-yellow-800 bg-slate-800 flex justify-between items-center mb-3"><div class="flex items-center gap-4"><span class="text-3xl">🍀</span><div><h4 class="font-bold text-sm text-yellow-500">${I18N[state.lang].luck_upgrade_name}</h4><p class="text-[10px] text-slate-400">${I18N[state.lang].luck_upgrade_desc}</p><p class="text-[10px] text-yellow-600 font-bold">${I18N[state.lang].level}: ${state.luckLevel}</p></div></div><button onclick="buyLuck()" class="bg-yellow-600 px-4 py-2 rounded-lg text-xs font-bold">${formatNumber(luckCost)}</button></div>`;
-                
-                // Super Sorte 1 em 100
-                const godLuckCost = 1000000000; // 1 Bilhão
+                const godLuckCost = 1000000000;
                 container.innerHTML += `<div class="p-4 rounded-xl border-2 border-purple-800 bg-slate-900 flex justify-between items-center ${state.godLuckOwned ? 'opacity-50' : ''}"><div class="flex items-center gap-4"><span class="text-3xl">✨</span><div><h4 class="font-bold text-sm text-purple-400">${I18N[state.lang].god_luck_name}</h4><p class="text-[10px] text-slate-400">${I18N[state.lang].god_luck_desc}</p></div></div>${state.godLuckOwned ? `<span class="text-xs text-purple-500 font-bold">ATIVADO</span>` : `<button onclick="buyGodLuck()" class="bg-purple-600 px-4 py-2 rounded-lg text-xs font-bold">${formatNumber(godLuckCost)}</button>`}</div>`;
             }
         }
 
-        function buyTool(idx) {
-            if (state.gold >= TOOLS[idx].cost) { state.gold -= TOOLS[idx].cost; TOOLS[idx].owned = true; state.activeToolIdx = idx; refreshAll(); }
-        }
-
-        function buyAuto(idx) {
-            const cost = Math.floor(AUTO_MINERS[idx].cost * Math.pow(1.3, AUTO_MINERS[idx].owned));
-            if (state.gold >= cost) { state.gold -= cost; AUTO_MINERS[idx].owned++; refreshAll(); }
-        }
-
-        function buyLuck() {
-            const cost = Math.floor(500 * Math.pow(2.5, state.luckLevel));
-            if (state.gold >= cost) { state.gold -= cost; state.luckLevel++; state.luck += 0.5; refreshAll(); }
-        }
-
-        function buyGodLuck() {
-            const cost = 1000000000;
-            if (!state.godLuckOwned && state.gold >= cost) { state.gold -= cost; state.godLuckOwned = true; refreshAll(); }
-        }
+        function buyTool(idx) { if (state.gold >= TOOLS[idx].cost) { state.gold -= TOOLS[idx].cost; TOOLS[idx].owned = true; state.activeToolIdx = idx; refreshAll(); saveGame(); } }
+        function buyAuto(idx) { const cost = Math.floor(AUTO_MINERS[idx].cost * Math.pow(1.3, AUTO_MINERS[idx].owned)); if (state.gold >= cost) { state.gold -= cost; AUTO_MINERS[idx].owned++; refreshAll(); saveGame(); } }
+        function buyLuck() { const cost = Math.floor(500 * Math.pow(2.5, state.luckLevel)); if (state.gold >= cost) { state.gold -= cost; state.luckLevel++; state.luck += 0.5; refreshAll(); saveGame(); } }
+        function buyGodLuck() { if (!state.godLuckOwned && state.gold >= 1000000000) { state.gold -= 1000000000; state.godLuckOwned = true; refreshAll(); saveGame(); } }
 
         function showPrestigeModal() {
             const cost = 10000 * Math.pow(10, state.prestigeRank);
@@ -455,15 +556,17 @@
             TOOLS.forEach((t, i) => { if (i !== 0 && !t.elite) t.owned = false; });
             AUTO_MINERS.forEach(m => m.owned = 0);
             state.activeToolIdx = 0;
-            closePrestigeModal(); spawnNextNode(); refreshAll();
+            closePrestigeModal(); spawnNextNode(); refreshAll(); saveGame();
         }
 
         function refreshAll() {
+            document.getElementById('player-name').innerText = state.profile.name;
+            document.getElementById('player-avatar').innerText = state.profile.avatar;
             document.getElementById('gold-display').innerText = formatNumber(state.gold);
             document.getElementById('rank-display').innerText = state.prestigeRank;
             document.getElementById('bonus-display').innerText = "x" + state.bonusMult.toFixed(1);
-            const displayLuck = state.godLuckOwned ? (state.luck * 100) : state.luck;
-            document.getElementById('luck-display').innerText = displayLuck.toFixed(1);
+            const luckDisp = state.godLuckOwned ? (state.luck * 100) : state.luck;
+            document.getElementById('luck-display').innerText = luckDisp.toFixed(1);
             const tool = TOOLS[state.activeToolIdx];
             document.getElementById('equipped-name').innerText = tool.name[state.lang];
             document.getElementById('equipped-icon').innerText = tool.icon;
@@ -476,7 +579,7 @@
                 const slot = document.createElement('div');
                 slot.className = `inventory-slot ${state.activeToolIdx === i ? 'active' : ''}`;
                 slot.innerHTML = `<span class="text-xl">${t.icon}</span>`;
-                slot.onclick = () => { state.activeToolIdx = i; refreshAll(); };
+                slot.onclick = () => { state.activeToolIdx = i; refreshAll(); saveGame(); };
                 grid.appendChild(slot);
             }});
         }
@@ -484,30 +587,22 @@
         function updateUI() {
             const node = NODES[state.currentNodeIdx];
             if(!node) return;
-            const percent = (state.currentHP / node.hp) * 100;
-            document.getElementById('progress-fill').style.width = `${Math.max(0, percent)}%`;
+            const pct = (state.currentHP / node.hp) * 100;
+            document.getElementById('progress-fill').style.width = `${Math.max(0, pct)}%`;
             document.getElementById('health-text').innerText = `${formatNumber(state.currentHP)} / ${formatNumber(node.hp)}`;
             document.getElementById('node-type').innerText = node.name[state.lang];
-            
-            const nodeEl = document.getElementById('node-icon');
-            const typeEl = document.getElementById('node-type');
-            
+            const nIco = document.getElementById('node-icon');
+            const nTyp = document.getElementById('node-type');
             if(node.color === 'rainbow') {
-                nodeEl.style.fill = 'white';
-                typeEl.className = "font-black text-lg uppercase tracking-tight rainbow-text";
+                nIco.style.fill = 'white'; nTyp.className = "font-black text-lg uppercase tracking-tight rainbow-text";
                 document.getElementById('resource-node').style.borderColor = 'white';
             } else {
-                nodeEl.style.fill = node.color;
-                typeEl.className = "font-black text-slate-200 text-lg uppercase tracking-tight";
+                nIco.style.fill = node.color; nTyp.className = "font-black text-slate-200 text-lg uppercase tracking-tight";
                 document.getElementById('resource-node').style.borderColor = node.color;
             }
         }
 
         function formatNumber(num) {
-            if (num >= 1e24) return (num / 1e24).toFixed(1) + "Y";
-            if (num >= 1e21) return (num / 1e21).toFixed(1) + "Z";
-            if (num >= 1e18) return (num / 1e18).toFixed(1) + "E";
-            if (num >= 1e15) return (num / 1e15).toFixed(1) + "Q";
             if (num >= 1e12) return (num / 1e12).toFixed(1) + "T";
             if (num >= 1e9) return (num / 1e9).toFixed(1) + "B";
             if (num >= 1e6) return (num / 1e6).toFixed(1) + "M";
@@ -515,9 +610,9 @@
             return Math.floor(num).toString();
         }
 
-        function createFloatingText(x, y, text, colorClass) {
+        function createFloatingText(x, y, text, color) {
             const el = document.createElement('div');
-            el.className = `floating-text pixel-font ${colorClass} text-[10px]`;
+            el.className = `floating-text pixel-font ${color} text-[10px]`;
             el.style.left = `${x}px`; el.style.top = `${y}px`;
             el.innerText = text; document.body.appendChild(el);
             setTimeout(() => el.remove(), 700);
