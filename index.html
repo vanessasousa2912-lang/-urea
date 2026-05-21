@@ -1,629 +1,2069 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mining Masters - Global Edition</title>
+    <title>draw!</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
-
         body {
+            font-family: 'Inter', sans-serif;
+            overscroll-behavior: none;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #475569;
+        }
+        /* Chessboard pattern for canvas transparent background */
+        .canvas-bg {
+            background-color: #ffffff;
+            background-image: radial-gradient(#e2e8f0 1px, transparent 0), radial-gradient(#e2e8f0 1px, transparent 0);
+            background-size: 20px 20px;
+            background-position: 0 0, 10px 10px;
+        }
+        .dark .canvas-bg {
             background-color: #0f172a;
-            color: #f1f5f9;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-image: radial-gradient(#1e293b 1px, transparent 0), radial-gradient(#1e293b 1px, transparent 0);
+            background-size: 20px 20px;
+            background-position: 0 0, 10px 10px;
+        }
+        .no-select {
             user-select: none;
+            -webkit-user-select: none;
         }
-
-        .pixel-font { font-family: 'Press+Start+2P', cursive; }
-
-        .resource-node {
-            transition: transform 0.1s, filter 0.1s;
-            cursor: pointer;
-            touch-action: manipulation;
+        .cursor-grab {
+            cursor: grab;
         }
-
-        .resource-node:active { transform: scale(0.92); filter: brightness(1.3); }
-
-        .progress-bar-container {
-            width: 100%;
-            height: 24px;
-            background: #1e293b;
-            border-radius: 12px;
+        .cursor-grabbing {
+            cursor: grabbing !important;
+        }
+        /* Estilos do Canvas Multi-Camadas */
+        .canvas-container {
+            position: relative;
+            box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+            border-radius: 1rem;
             overflow: hidden;
-            border: 2px solid #334155;
         }
-
-        .progress-fill {
-            height: 100%;
-            width: 0%;
-            background: linear-gradient(90deg, #3b82f6, #60a5fa);
-            transition: width 0.1s linear;
-        }
-
-        .inventory-slot {
-            width: 50px;
-            height: 50px;
-            background: #1e293b;
-            border: 2px solid #334155;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            border-radius: 8px;
-            transition: all 0.2s;
-        }
-
-        .inventory-slot.active {
-            border-color: #f59e0b;
-            background: #451a03;
-            box-shadow: 0 0 15px rgba(245, 158, 11, 0.4);
-        }
-
-        .floating-text {
+        .canvas-layer {
             position: absolute;
-            pointer-events: none;
-            animation: floatUp 0.7s ease-out forwards;
-            font-weight: bold;
-            z-index: 50;
+            top: 0;
+            left: 0;
+            outline: none;
         }
-
-        @keyframes floatUp {
-            0% { transform: translateY(0); opacity: 1; }
-            100% { transform: translateY(-60px); opacity: 0; }
-        }
-
-        .shake { animation: shake 0.2s; }
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-4px); }
-            75% { transform: translateX(4px); }
-        }
-
-        .prestige-btn { background: linear-gradient(135deg, #7c3aed, #4f46e5); transition: all 0.3s; }
-        .prestige-btn:hover:not(:disabled) { filter: brightness(1.2); transform: translateY(-2px); }
-
-        .rainbow-text {
-            animation: rainbow 3s linear infinite;
-        }
-        @keyframes rainbow {
-            0% { color: #ff0000; }
-            20% { color: #ff8800; }
-            40% { color: #ffff00; }
-            60% { color: #00ff00; }
-            80% { color: #0000ff; }
-            100% { color: #ff00ff; }
-        }
-
-        .modal-blur { backdrop-filter: blur(8px); }
-
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: #0f172a; }
-        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
     </style>
 </head>
-<body class="p-2 md:p-6">
+<body class="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen flex flex-col transition-colors duration-200 overflow-hidden">
 
-    <div class="max-w-6xl mx-auto">
-        <!-- Header / Perfil / Idioma -->
-        <div class="flex flex-col md:flex-row items-center justify-between mb-6 bg-slate-800/50 p-4 rounded-2xl border border-slate-700 gap-4">
-            <div class="flex items-center gap-4">
-                <div id="player-avatar" class="w-12 h-12 bg-slate-700 rounded-full flex items-center justify-center text-2xl border-2 border-blue-500 shadow-lg shadow-blue-500/20">👤</div>
+    <!-- MAIN INTERFACE HEADER -->
+    <header id="main-header" class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 py-3 flex items-center justify-between z-10 transition-all duration-300">
+        <div class="flex items-center space-x-3">
+            <div class="bg-gradient-to-tr from-brand-500 to-indigo-600 p-2.5 rounded-xl shadow-md text-white">
+                <i class="fa-solid fa-palette text-xl"></i>
+            </div>
+            <div>
+                <h1 class="font-bold text-lg leading-tight tracking-tight flex items-center gap-2">
+                    draw 
+                    <span class="text-xs bg-emerald-100 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 font-semibold py-0.5 px-2 rounded-full border border-emerald-200/50 dark:border-emerald-800/50">Pro v3.0</span>
+                </h1>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Pinte, grave, gerencie camadas e crie arte de forma livre</p>
+            </div>
+        </div>
+
+        <div class="flex items-center space-x-3">
+            <!-- Save status -->
+            <div id="cloud-status" class="hidden md:flex items-center space-x-1.5 bg-emerald-50 dark:bg-emerald-950/30 py-1.5 px-3 rounded-lg border border-emerald-200/60 dark:border-emerald-800/40 text-xs text-emerald-600 dark:text-emerald-400">
+                <i id="cloud-status-icon" class="fa-solid fa-circle-check"></i>
+                <span id="cloud-status-text">Salvamento Local Ativo</span>
+            </div>
+
+            <!-- Dark Mode Toggle -->
+            <button id="btn-dark-mode" class="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition" title="Alternar Modo Escuro">
+                <i class="fa-solid fa-moon dark:hidden"></i>
+                <i class="fa-solid fa-sun hidden dark:inline"></i>
+            </button>
+
+            <!-- Hide UI Toggle -->
+            <button id="btn-hide-ui" class="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition" title="Ocultar Interface (Ver Arte)">
+                <i class="fa-solid fa-eye-slash"></i>
+            </button>
+
+            <!-- Profile Badge trigger -->
+            <button id="btn-profile" class="flex items-center space-x-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 p-1.5 pr-3 rounded-lg text-xs transition">
+                <div id="user-avatar-container" class="w-6 h-6 rounded-full bg-gradient-to-r from-teal-400 to-indigo-500 flex items-center justify-center text-white overflow-hidden font-bold">
+                    <span id="header-avatar-emoji" class="text-sm">🎨</span>
+                    <img id="header-avatar-img" class="w-full h-full object-cover hidden" src="" alt="Avatar">
+                </div>
+                <span id="user-id-display" class="font-medium text-slate-600 dark:text-slate-300 truncate max-w-[100px]">Artista Local</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- WORKSPACE -->
+    <div class="flex-1 flex overflow-hidden relative">
+
+        <!-- LEFT SIDEBAR: Tools and Brush properties -->
+        <aside id="left-sidebar" class="w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col z-10 transition-all duration-300">
+            <!-- Toolkit -->
+            <div class="p-4 border-b border-slate-100 dark:border-slate-800/80">
+                <h2 class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3">Ferramentas de Pintura</h2>
+                
+                <div class="grid grid-cols-2 gap-2">
+                    <button data-tool="brush" class="btn-tool active flex flex-col items-center justify-center p-3 rounded-xl border text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/50 border-brand-500 hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-brand-950/20 transition group">
+                        <i class="fa-solid fa-paint-brush text-lg mb-1.5 group-[.active]:text-brand-500"></i>
+                        <span class="text-xs font-medium">Pincel</span>
+                    </button>
+                    <button data-tool="eraser" class="btn-tool flex flex-col items-center justify-center p-3 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition group">
+                        <i class="fa-solid fa-eraser text-lg mb-1.5 group-[.active]:text-brand-500"></i>
+                        <span class="text-xs font-medium">Borracha</span>
+                    </button>
+                    <button data-tool="fill" class="btn-tool flex flex-col items-center justify-center p-3 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition group" title="Preenchimento rápido">
+                        <i class="fa-solid fa-fill-drip text-lg mb-1.5 group-[.active]:text-brand-500"></i>
+                        <span class="text-xs font-medium">Balde</span>
+                    </button>
+                    <button data-tool="line" class="btn-tool flex flex-col items-center justify-center p-3 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition group">
+                        <i class="fa-solid fa-minus text-lg mb-1.5 group-[.active]:text-brand-500 rotate-45"></i>
+                        <span class="text-xs font-medium">Linha</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Shapes Toolkit -->
+            <div class="p-4 border-b border-slate-100 dark:border-slate-800/80">
+                <h2 class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2.5">Formas Geométricas</h2>
+                <div class="grid grid-cols-4 gap-1.5">
+                    <button data-tool="rect" class="btn-tool p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 hover:border-brand-500 dark:hover:border-brand-500 transition" title="Retângulo">
+                        <i class="fa-regular fa-square text-base"></i>
+                    </button>
+                    <button data-tool="circle" class="btn-tool p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 hover:border-brand-500 dark:hover:border-brand-500 transition" title="Círculo">
+                        <i class="fa-regular fa-circle text-base"></i>
+                    </button>
+                    <button data-tool="triangle" class="btn-tool p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 hover:border-brand-500 dark:hover:border-brand-500 transition" title="Triângulo">
+                        <i class="fa-solid fa-play -rotate-90 text-sm"></i>
+                    </button>
+                    <button data-tool="star" class="btn-tool p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 hover:border-brand-500 dark:hover:border-brand-500 transition" title="Estrela">
+                        <i class="fa-regular fa-star text-base"></i>
+                    </button>
+                </div>
+                <!-- Shape Style Settings -->
+                <div class="mt-3 flex items-center justify-between text-xs">
+                    <span class="text-slate-500">Preenchimento:</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="shape-fill-toggle" class="sr-only peer">
+                        <div class="w-9 h-5 bg-slate-200 dark:bg-slate-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-brand-500"></div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Brush and Palettes properties -->
+            <div class="p-4 border-b border-slate-100 dark:border-slate-800/80 space-y-4 overflow-y-auto flex-1 max-h-[40vh]">
+                <!-- Espessura do Pincel -->
                 <div>
-                    <h1 id="player-name" class="font-bold text-slate-100 leading-tight">Minerador</h1>
-                    <div class="flex items-center gap-2">
-                        <span id="status-label" class="text-[9px] text-blue-400 font-bold uppercase tracking-widest">Status: Ativo</span>
-                        <button onclick="resetGameData()" class="text-[9px] text-slate-500 hover:text-red-400 transition uppercase font-bold">[Reset]</button>
+                    <div class="flex justify-between items-center mb-1.5">
+                        <label class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Espessura</label>
+                        <span id="brush-size-display" class="text-xs font-semibold bg-slate-100 dark:bg-slate-800 py-0.5 px-2 rounded-md">8 px</span>
+                    </div>
+                    <input type="range" id="brush-size" min="1" max="100" value="8" class="w-full accent-brand-500">
+                </div>
+
+                <!-- Transparência / Opacidade do Pincel -->
+                <div>
+                    <div class="flex justify-between items-center mb-1.5">
+                        <label class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Opacidade Pincel</label>
+                        <span id="brush-opacity-display" class="text-xs font-semibold bg-slate-100 dark:bg-slate-800 py-0.5 px-2 rounded-md">100%</span>
+                    </div>
+                    <input type="range" id="brush-opacity" min="1" max="100" value="100" class="w-full accent-brand-500">
+                </div>
+
+                <!-- Paleta de Cores -->
+                <div>
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Paleta de Cores</label>
+                        <div class="relative">
+                            <input type="color" id="color-picker" value="#3b82f6" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full">
+                            <div id="color-preview" class="w-6 h-6 rounded-md border border-slate-300 dark:border-slate-600 shadow-sm" style="background-color: #3b82f6;"></div>
+                        </div>
+                    </div>
+                    <!-- Standard Palette Grid -->
+                    <div class="grid grid-cols-7 gap-1 mb-3">
+                        <div class="color-swatch w-6 h-6 rounded-md cursor-pointer border border-transparent hover:scale-110 transition shadow-sm" style="background-color: #000000;" data-color="#000000" title="#000000"></div>
+                        <div class="color-swatch w-6 h-6 rounded-md cursor-pointer border border-transparent hover:scale-110 transition shadow-sm" style="background-color: #ffffff;" data-color="#ffffff" title="#ffffff"></div>
+                        <div class="color-swatch w-6 h-6 rounded-md cursor-pointer border border-transparent hover:scale-110 transition shadow-sm" style="background-color: #ef4444;" data-color="#ef4444" title="#ef4444"></div>
+                        <div class="color-swatch w-6 h-6 rounded-md cursor-pointer border border-transparent hover:scale-110 transition shadow-sm" style="background-color: #f97316;" data-color="#f97316" title="#f97316"></div>
+                        <div class="color-swatch w-6 h-6 rounded-md cursor-pointer border border-transparent hover:scale-110 transition shadow-sm" style="background-color: #eab308;" data-color="#eab308" title="#eab308"></div>
+                        <div class="color-swatch w-6 h-6 rounded-md cursor-pointer border border-transparent hover:scale-110 transition shadow-sm" style="background-color: #22c55e;" data-color="#22c55e" title="#22c55e"></div>
+                        <div class="color-swatch w-6 h-6 rounded-md cursor-pointer border border-transparent hover:scale-110 transition shadow-sm" style="background-color: #06b6d4;" data-color="#06b6d4" title="#06b6d4"></div>
+                        <div class="color-swatch w-6 h-6 rounded-md cursor-pointer border border-transparent hover:scale-110 transition shadow-sm" style="background-color: #3b82f6;" data-color="#3b82f6" title="#3b82f6"></div>
+                        <div class="color-swatch w-6 h-6 rounded-md cursor-pointer border border-transparent hover:scale-110 transition shadow-sm" style="background-color: #6366f1;" data-color="#6366f1" title="#6366f1"></div>
+                        <div class="color-swatch w-6 h-6 rounded-md cursor-pointer border border-transparent hover:scale-110 transition shadow-sm" style="background-color: #a855f7;" data-color="#a855f7" title="#a855f7"></div>
+                        <div class="color-swatch w-6 h-6 rounded-md cursor-pointer border border-transparent hover:scale-110 transition shadow-sm" style="background-color: #ec4899;" data-color="#ec4899" title="#ec4899"></div>
+                        <div class="color-swatch w-6 h-6 rounded-md cursor-pointer border border-transparent hover:scale-110 transition shadow-sm" style="background-color: #64748b;" data-color="#64748b" title="#64748b"></div>
+                        <div class="color-swatch w-6 h-6 rounded-md cursor-pointer border border-transparent hover:scale-110 transition shadow-sm" style="background-color: #b45309;" data-color="#b45309" title="#b45309"></div>
+                        <div class="color-swatch w-6 h-6 rounded-md cursor-pointer border border-transparent hover:scale-110 transition shadow-sm" style="background-color: #0f172a;" data-color="#0f172a" title="#0f172a"></div>
+                    </div>
+
+                    <!-- Custom Colors Section -->
+                    <div class="border-t border-slate-100 dark:border-slate-800 pt-3">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Cores Customizadas</span>
+                            <span id="clear-custom-colors" class="text-[9px] text-rose-500 hover:underline cursor-pointer hidden">Limpar</span>
+                        </div>
+                        <div class="flex flex-wrap gap-1 items-center">
+                            <!-- Dynamic custom colors loaded here -->
+                            <div id="custom-colors-container" class="flex flex-wrap gap-1"></div>
+                            
+                            <!-- Add Color Button -->
+                            <button id="btn-add-color" class="w-6 h-6 rounded-md border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-brand-500 dark:hover:border-brand-500 hover:scale-105 active:scale-95 transition flex items-center justify-center text-slate-400 hover:text-brand-500" title="Adicionar cor atual à paleta">
+                                <i class="fa-solid fa-plus text-xs"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="flex gap-2 bg-slate-900 p-1 rounded-xl border border-slate-700">
-                <button onclick="setLanguage('pt')" class="px-3 py-1 text-sm hover:bg-slate-800 rounded-lg transition">🇧🇷</button>
-                <button onclick="setLanguage('en')" class="px-3 py-1 text-sm hover:bg-slate-800 rounded-lg transition">🇺🇸</button>
-                <button onclick="setLanguage('es')" class="px-3 py-1 text-sm hover:bg-slate-800 rounded-lg transition">🇲🇽</button>
-            </div>
-        </div>
-
-        <!-- Dashboard -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <div class="bg-slate-800 p-4 rounded-2xl border-b-4 border-slate-950 flex items-center justify-between">
-                <div>
-                    <p data-i18n="gold_total" class="text-xs text-slate-400 uppercase font-bold tracking-tighter">Ouro Total</p>
-                    <span id="gold-display" class="text-3xl font-bold text-yellow-400">0</span>
-                </div>
-                <div class="text-4xl">💰</div>
-            </div>
-            
-            <div class="bg-slate-800 p-4 rounded-2xl border-b-4 border-slate-950 flex items-center justify-between">
-                <div>
-                    <p data-i18n="auto_mining" class="text-xs text-slate-400 uppercase font-bold tracking-tighter">Auto-Mineração</p>
-                    <span id="auto-display" class="text-xl font-bold text-blue-400">0 / seg</span>
-                </div>
-                <div class="text-4xl">🤖</div>
-            </div>
-
-            <div class="bg-slate-800 p-4 rounded-2xl border-b-4 border-slate-950 flex items-center justify-between">
-                <div>
-                    <p class="text-xs text-slate-400 uppercase font-bold tracking-tighter"><span data-i18n="prestige">Prestígio</span> (Rank <span id="rank-display">0</span>)</p>
-                    <span id="bonus-display" class="text-xl font-bold text-purple-400">x1.0 Poder</span>
-                </div>
-                <button onclick="showPrestigeModal()" data-i18n="rank_up" class="prestige-btn text-white px-3 py-1 rounded-lg text-xs font-bold uppercase shadow-lg">Rank Up</button>
-            </div>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <div class="lg:col-span-6 space-y-6">
-                <div class="bg-slate-800 p-6 rounded-3xl relative flex flex-col items-center justify-center border-4 border-slate-700 min-h-[480px] shadow-2xl">
+            <!-- Canvas Resizer Controller -->
+            <div class="p-4 border-t border-slate-100 dark:border-slate-800/80">
+                <div class="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-200/60 dark:border-slate-800 space-y-3">
+                    <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wide flex items-center gap-1.5">
+                        <i class="fa-solid fa-up-right-and-down-left-from-center text-[10px]"></i>
+                        Quadro (Canvas)
+                    </h3>
                     
-                    <div class="absolute top-4 left-4 bg-slate-950 px-4 py-2 rounded-xl border border-slate-600 flex items-center gap-3">
-                        <div id="equipped-icon" class="text-xl">✋</div>
+                    <div class="grid grid-cols-2 gap-2">
                         <div>
-                            <p data-i18n="equipped" class="text-[10px] text-slate-500 leading-none">EQUIPADO</p>
-                            <span id="equipped-name" class="text-xs font-bold text-yellow-500 uppercase">---</span>
+                            <label class="text-[10px] text-slate-400 font-semibold uppercase block mb-1">Largura</label>
+                            <input type="number" id="canvas-width" value="800" min="100" max="3000" class="w-full text-xs font-mono bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 py-1.5 px-2 rounded-md">
+                        </div>
+                        <div>
+                            <label class="text-[10px] text-slate-400 font-semibold uppercase block mb-1">Altura</label>
+                            <input type="number" id="canvas-height" value="550" min="100" max="3000" class="w-full text-xs font-mono bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 py-1.5 px-2 rounded-md">
                         </div>
                     </div>
+                    
+                    <button id="btn-resize" class="w-full py-1.5 text-xs bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 font-semibold rounded-lg transition">
+                        Redimensionar
+                    </button>
+                </div>
+            </div>
+        </aside>
 
-                    <div class="absolute top-4 right-4 bg-slate-950 px-3 py-1 rounded-xl border border-yellow-900/50 flex flex-col items-center">
-                        <p data-i18n="luck" class="text-[9px] text-yellow-600 font-bold">SORTE</p>
-                        <span id="luck-display" class="text-xs font-bold text-yellow-400">1.0</span>
-                    </div>
+        <!-- CANVAS MAIN WORKSPACE AREA -->
+        <main class="flex-1 flex flex-col bg-slate-200 dark:bg-slate-900 transition-colors duration-200 relative overflow-hidden">
+            <!-- Canvas Top Toolbar (Undo, Redo, Zoom, Clear) -->
+            <div id="canvas-header-toolbar" class="bg-white dark:bg-slate-900 border-b border-slate-200/80 dark:border-slate-800 px-4 py-2 flex items-center justify-between z-10">
+                <div class="flex items-center space-x-2">
+                    <button id="btn-undo" class="p-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition disabled:opacity-40" title="Desfazer (Ctrl+Z)" disabled>
+                        <i class="fa-solid fa-reply"></i>
+                    </button>
+                    <button id="btn-redo" class="p-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition disabled:opacity-40" title="Refazer (Ctrl+Y)" disabled>
+                        <i class="fa-solid fa-share"></i>
+                    </button>
+                    <div class="h-5 w-[1px] bg-slate-200 dark:bg-slate-700 mx-1"></div>
+                    <button id="btn-clear" class="py-1.5 px-3 rounded-lg text-xs font-semibold text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition flex items-center gap-1">
+                        <i class="fa-regular fa-trash-can"></i> Limpar Tudo
+                    </button>
+                </div>
 
-                    <div id="target-container" class="relative group mt-8">
-                        <div id="resource-node" class="resource-node w-56 h-56 flex items-center justify-center bg-slate-700 rounded-[2.5rem] shadow-2xl border-b-8 border-slate-900">
-                            <svg id="node-icon" viewBox="0 0 24 24" class="w-36 h-36 drop-shadow-lg">
-                                <path d="M12,2L4.5,20.29L5.21,21L12,18L18.79,21L19.5,20.29L12,2Z"/>
-                            </svg>
-                        </div>
-                    </div>
-
-                    <button id="skip-btn" onclick="skipItem()" class="mt-4 skip-btn bg-slate-700 hover:bg-slate-600 px-6 py-2 rounded-full border border-slate-600 text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition">
-                        <span id="skip-icon">⏭️</span>
-                        <span data-i18n="skip_item">Pular Item</span>
-                        <span id="skip-timer" class="hidden text-red-500 ml-1">15s</span>
+                <!-- Export/Storage Controls -->
+                <div class="flex items-center space-x-2">
+                    <!-- Toggle Layers Panel -->
+                    <button id="btn-toggle-layers-panel" class="py-1.5 px-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition" title="Exibir/Ocultar Painel de Camadas">
+                        <i class="fa-solid fa-layer-group text-brand-500"></i> Painel Camadas
                     </button>
 
-                    <div class="w-full mt-6 px-4">
-                        <div class="flex justify-between mb-2 items-end">
-                            <div>
-                                <span id="node-type" class="font-black text-slate-200 text-lg uppercase tracking-tight">---</span>
-                                <p data-i18n="resistance" class="text-[10px] text-slate-500 uppercase">RESISTÊNCIA DO ITEM</p>
-                            </div>
-                            <span id="health-text" class="font-mono text-sm font-bold text-blue-400">0/0</span>
-                        </div>
-                        <div class="progress-bar-container">
-                            <div id="progress-fill" class="progress-fill"></div>
-                        </div>
-                    </div>
-                </div>
+                    <!-- Save Art (LocalStorage) -->
+                    <button id="btn-save-art" class="py-1.5 px-3 bg-brand-500 hover:bg-brand-600 text-white rounded-lg text-xs font-semibold shadow-sm flex items-center gap-1.5 transition">
+                        <i class="fa-solid fa-floppy-disk"></i> Salvar Desenho
+                    </button>
 
-                <div class="bg-slate-800 p-4 rounded-2xl border-b-4 border-slate-950">
-                    <h2 data-i18n="toolbox" class="text-xs font-bold mb-4 text-slate-400 uppercase tracking-widest text-center">Caixa de Ferramentas</h2>
-                    <div id="inventory-grid" class="flex flex-wrap gap-2 justify-center"></div>
+                    <!-- Artworks Notepad Gallery button -->
+                    <button id="btn-open-gallery" class="py-1.5 px-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition relative">
+                        <i class="fa-solid fa-note-sticky"></i> Meus Desenhos
+                        <span id="saved-badge-count" class="hidden absolute -top-1.5 -right-1 px-1.5 py-0.5 bg-brand-500 text-white rounded-full text-[9px] font-bold leading-none">0</span>
+                    </button>
+
+                    <!-- Export/Download options -->
+                    <div class="relative group inline-block">
+                        <button class="py-1.5 px-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold shadow-sm flex items-center gap-1.5 transition">
+                            <i class="fa-solid fa-download"></i> Baixar Arte <i class="fa-solid fa-chevron-down text-[10px] ml-0.5"></i>
+                        </button>
+                        <ul class="absolute right-0 mt-1.5 w-36 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl overflow-hidden hidden group-hover:block hover:block z-40">
+                            <li><button data-format="png" class="btn-download-format w-full text-left px-4 py-2 text-xs hover:bg-slate-100 dark:hover:bg-slate-800 transition flex items-center gap-2"><i class="fa-solid fa-file-image text-emerald-500"></i> Formato .PNG</button></li>
+                            <li><button data-format="jpeg" class="btn-download-format w-full text-left px-4 py-2 text-xs hover:bg-slate-100 dark:hover:bg-slate-800 transition flex items-center gap-2"><i class="fa-solid fa-image text-blue-500"></i> Formato .JPEG</button></li>
+                            <li><button data-format="jpg" class="btn-download-format w-full text-left px-4 py-2 text-xs hover:bg-slate-100 dark:hover:bg-slate-800 transition flex items-center gap-2"><i class="fa-solid fa-images text-purple-500"></i> Formato .JPG</button></li>
+                            <div class="border-t border-slate-100 dark:border-slate-800"></div>
+                            <li><button id="btn-record-mp4" class="w-full text-left px-4 py-2 text-xs hover:bg-rose-50 dark:hover:bg-rose-950/20 text-rose-500 transition flex items-center gap-2 font-medium"><i class="fa-solid fa-circle text-rose-500 animate-pulse"></i> Gravar MP4</button></li>
+                        </ul>
+                    </div>
                 </div>
             </div>
 
-            <div class="lg:col-span-6 space-y-6">
-                <div class="bg-slate-800 rounded-2xl border-b-4 border-slate-950 overflow-hidden flex flex-col h-[650px]">
-                    <div class="flex border-b border-slate-700">
-                        <button onclick="switchTab('tools')" id="tab-tools" data-i18n="tab_equip" class="flex-1 p-4 font-bold text-xs uppercase tracking-widest bg-slate-700 text-white">Equipamentos</button>
-                        <button onclick="switchTab('auto')" id="tab-auto" data-i18n="tab_auto" class="flex-1 p-4 font-bold text-xs uppercase tracking-widest hover:bg-slate-700 transition">Automação</button>
-                        <button onclick="switchTab('upgrades')" id="tab-upgrades" data-i18n="tab_upgrades" class="flex-1 p-4 font-bold text-xs uppercase tracking-widest hover:bg-slate-700 transition">Upgrades</button>
+            <!-- Canvas Workspace Panel -->
+            <div class="flex-1 overflow-auto p-8 flex items-center justify-center relative select-none">
+                <!-- Wrapper das Camadas de Desenho -->
+                <div id="canvas-container-wrapper" class="canvas-container">
+                    <div id="canvas-layers-stack" class="relative">
+                        <!-- Camadas injetadas via JS -->
+                    </div>
+                    <!-- Canvas de Input para Captura de Traço e Preview -->
+                    <canvas id="input-canvas" class="absolute top-0 left-0 cursor-crosshair z-50 pointer-events-auto" style="background: transparent;"></canvas>
+                </div>
+
+                <!-- PAINEL DE CAMADAS FLUTUANTE (Photoshop Style - Movível e Escondível) -->
+                <div id="layers-panel" class="absolute right-4 top-4 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-4 w-[310px] z-[1010] flex flex-col max-h-[420px] transition-all duration-200 select-none">
+                    <!-- Cabeçalho de Arrastar -->
+                    <div id="layers-panel-header" class="flex items-center justify-between mb-2.5 pb-2 border-b border-slate-100 dark:border-slate-800 cursor-grab active:cursor-grabbing select-none" title="Arraste para mover o painel">
+                        <h3 class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1.5 pointer-events-none">
+                            <i class="fa-solid fa-grip-vertical text-slate-400"></i>
+                            <i class="fa-solid fa-layer-group"></i> Camadas
+                        </h3>
+                        <div class="flex items-center gap-1">
+                            <button id="btn-add-layer" class="text-brand-500 hover:text-brand-600 text-xs transition p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg" title="Nova Camada">
+                                <i class="fa-solid fa-plus-circle text-lg"></i>
+                            </button>
+                            <button id="btn-merge-layers" class="text-amber-500 hover:text-amber-600 text-xs transition p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg disabled:opacity-40" title="Mesclar com a de Baixo">
+                                <i class="fa-solid fa-layer-group rotate-180 text-base"></i>
+                            </button>
+                            <button id="btn-minimize-layers" class="text-slate-400 hover:text-slate-600 dark:hover:text-white transition p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg" title="Minimizar">
+                                <i class="fa-solid fa-chevron-up"></i>
+                            </button>
+                            <button id="btn-close-layers" class="text-slate-400 hover:text-rose-500 transition p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg" title="Ocultar Painel">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
                     </div>
                     
-                    <div id="shop-container" class="p-4 overflow-y-auto flex-1 space-y-3"></div>
+                    <!-- Conteúdo Minimizado -->
+                    <div id="layers-panel-content" class="flex flex-col flex-1 overflow-hidden transition-all duration-200">
+                        <!-- Opacidade da Camada Ativa -->
+                        <div class="mb-3 bg-slate-50 dark:bg-slate-950 p-2 rounded-lg border border-slate-100 dark:border-slate-800/80">
+                            <div class="flex justify-between items-center text-[10px] mb-1">
+                                <span class="font-medium text-slate-400 uppercase">Opacidade da Camada</span>
+                                <span id="active-layer-opacity-val" class="font-bold text-brand-500">100%</span>
+                            </div>
+                            <input type="range" id="layer-opacity-slider" min="0" max="100" value="100" class="w-full h-1 bg-slate-200 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer accent-brand-500">
+                        </div>
+
+                        <!-- Lista de camadas carregada dinamicamente -->
+                        <div id="layers-list" class="flex-1 overflow-y-auto space-y-2 max-h-[220px] pr-1"></div>
+                    </div>
+                </div>
+
+                <!-- Video recording HUD overlay -->
+                <div id="recording-hud" class="absolute top-4 left-4 bg-slate-900/90 text-white py-2 px-3 rounded-xl border border-rose-500/50 shadow-lg text-xs font-semibold flex items-center space-x-2.5 hidden animate-bounce z-[1020]">
+                    <span class="relative flex h-2.5 w-2.5">
+                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                      <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500"></span>
+                    </span>
+                    <span id="recording-time" class="font-mono">REC: 00:00</span>
+                    <button id="btn-stop-recording" class="bg-rose-500 hover:bg-rose-600 active:scale-95 text-white py-1 px-2.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition">Parar & Salvar</button>
                 </div>
             </div>
-        </div>
 
-        <div id="game-log" class="mt-6 text-xs text-slate-500 h-16 overflow-hidden bg-slate-950 bg-opacity-50 p-3 rounded-xl italic border border-slate-800"></div>
+            <!-- Status bar info -->
+            <footer id="canvas-footer-status" class="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 px-4 py-1.5 flex justify-between items-center text-[10px] text-slate-400 dark:text-slate-500 z-10 transition-all duration-300">
+                <div class="flex items-center space-x-4">
+                    <span id="coord-display">Coordenadas: 0px, 0px</span>
+                    <span id="active-layer-status">Camada Ativa: Nenhuma</span>
+                </div>
+                <div>Feito com paixão • draw Camadas & Transparência</div>
+            </footer>
+        </main>
     </div>
 
-    <!-- Modal de Criação de Perfil -->
-    <div id="profile-modal" class="fixed inset-0 bg-slate-950/90 hidden z-[200] flex items-center justify-center p-4 modal-blur">
-        <div class="bg-slate-800 max-w-sm w-full rounded-3xl p-8 border-4 border-blue-600 shadow-2xl">
-            <h2 id="profile-title" class="text-xl font-black text-center text-blue-400 mb-6 uppercase tracking-tighter">CRIAR IDENTIDADE</h2>
-            <div class="space-y-6">
-                <div>
-                    <label id="label-name" class="text-[10px] font-bold text-slate-500 uppercase ml-1">Seu Nome de Minerador</label>
-                    <input id="input-name" type="text" maxlength="15" placeholder="..." class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl px-4 py-3 text-slate-100 focus:border-blue-500 outline-none transition mt-1">
-                </div>
-                <div>
-                    <label id="label-avatar" class="text-[10px] font-bold text-slate-500 uppercase ml-1">Escolha seu Avatar</label>
-                    <div id="avatar-selector" class="grid grid-cols-4 gap-2 mt-2"></div>
-                </div>
-                <button onclick="saveInitialProfile()" id="btn-start" class="w-full py-4 rounded-xl bg-blue-600 hover:bg-blue-500 font-bold uppercase text-sm shadow-lg shadow-blue-900/40 transition">COMEÇAR JORNADA</button>
-            </div>
+    <!-- FLOATING HUD FOR IMMERSIVE MODE -->
+    <div id="floating-immersive-hud" class="fixed top-6 right-6 z-50 flex items-center bg-slate-900/90 backdrop-blur-md text-white py-2 px-4 rounded-2xl shadow-2xl border border-slate-700/80 space-x-4 transition-all duration-500 translate-y-[-100px] opacity-0 pointer-events-none">
+        <div class="flex items-center space-x-2 border-r border-slate-700 pr-4">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span class="text-xs font-bold uppercase tracking-wider">Modo Imersivo</span>
         </div>
+        <button id="floating-btn-restore" class="flex items-center space-x-1 bg-brand-500 hover:bg-brand-600 text-white font-semibold text-xs py-1.5 px-3.5 rounded-xl transition shadow">
+            <i class="fa-solid fa-eye mr-1"></i> Mostrar Ferramentas
+        </button>
     </div>
 
-    <!-- Modal de Prestígio -->
-    <div id="prestige-modal" class="fixed inset-0 bg-black/80 hidden z-[100] flex items-center justify-center p-4">
-        <div class="bg-slate-800 max-w-md w-full rounded-3xl p-8 border-4 border-purple-600">
-            <h2 data-i18n="prestige_title" class="text-2xl font-black text-center text-purple-400 mb-2 uppercase">Avanço de Rank</h2>
-            <p data-i18n="prestige_desc" class="text-slate-400 text-sm text-center mb-6">Reset seu progresso para ganhar um multiplicador de poder e novas eras.</p>
-            <div class="bg-slate-900 rounded-2xl p-4 mb-6 space-y-3">
-                <div class="flex justify-between items-center">
-                    <span data-i18n="prestige_cost" class="text-xs text-slate-400 uppercase">Custo:</span>
-                    <span id="prestige-cost" class="font-bold text-yellow-500">0</span>
-                </div>
+    <!-- MODAL SOBREPOSTO: PAINEL DE CONTA & PERFIL (Glassmorphism Overlay Panel) -->
+    <div id="modal-profile-overlay" class="fixed inset-0 bg-slate-950/70 backdrop-blur-md z-[1100] flex items-center justify-center opacity-0 pointer-events-none transition-all duration-300">
+        <div class="bg-white/95 dark:bg-slate-900/95 border border-slate-200 dark:border-slate-800 w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden p-6 transform translate-y-4 transition-all duration-300 relative">
+            <div class="flex justify-between items-center mb-5 pb-3 border-b border-slate-100 dark:border-slate-800">
+                <h3 class="font-bold text-lg flex items-center gap-2 text-slate-900 dark:text-white">
+                    <i class="fa-solid fa-id-card text-brand-500"></i>
+                    Identidade de Artista
+                </h3>
+                <button class="btn-close-profile-overlay p-2 rounded-xl text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
             </div>
-            <div class="flex gap-4">
-                <button onclick="closePrestigeModal()" data-i18n="cancel" class="flex-1 py-3 rounded-xl bg-slate-700 font-bold uppercase text-xs">CANCELAR</button>
-                <button id="confirm-prestige-btn" onclick="executePrestige()" data-i18n="rank_up" class="flex-1 py-3 rounded-xl prestige-btn font-bold uppercase text-xs">RANK UP!</button>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        const I18N = {
-            pt: {
-                gold_total: "Ouro Total", auto_mining: "Auto-Mineração", prestige: "Prestígio", rank_up: "Rank Up", equipped: "Equipado", 
-                luck: "Sorte", resistance: "Resistência", toolbox: "Caixa de Ferramentas", tab_equip: "Equipamentos", tab_auto: "Automação", 
-                tab_upgrades: "Upgrades", prestige_title: "Avanço de Rank", prestige_desc: "Reseta o progresso por poder permanente.",
-                prestige_cost: "Custo:", cancel: "Cancelar", acquired: "Adquirido", buy: "Comprar", damage: "Dano",
-                luck_upgrade_name: "Amuleto da Sorte", luck_upgrade_desc: "Mais minérios raros.", level: "Nível",
-                msg_break: "Quebrou {0}! (+{1} Ouro)", msg_bought: "Comprou {0}!", msg_prestige: "RANK UP! Nível {0}",
-                skip_item: "Pular Item", msg_skip: "Scanner ativado: Item descartado.",
-                god_luck_name: "Sorte de 1 em 100", god_luck_desc: "Multiplica sua sorte por 100x!",
-                profile_title: "CRIAR IDENTIDADE", label_name: "Seu Nome", label_avatar: "Avatar", btn_start: "COMEÇAR JORNADA",
-                status_active: "Status: Ativo"
-            },
-            en: {
-                gold_total: "Total Gold", auto_mining: "Auto-Mining", prestige: "Prestige", rank_up: "Rank Up", equipped: "Equipped", 
-                luck: "Luck", resistance: "Durability", toolbox: "Toolbox", tab_equip: "Equipment", tab_auto: "Automation", 
-                tab_upgrades: "Upgrades", prestige_title: "Rank Advance", prestige_desc: "Reset progress for permanent power bonus.",
-                prestige_cost: "Cost:", cancel: "Cancel", acquired: "Owned", buy: "Buy", damage: "Damage",
-                luck_upgrade_name: "Lucky Charm", luck_upgrade_desc: "Better rare ore spawns.", level: "Level",
-                msg_break: "Broke {0}! (+{1} Gold)", msg_bought: "Bought {0}!", msg_prestige: "RANK UP! Level {0}",
-                skip_item: "Skip Item", msg_skip: "Scanner active: Item discarded.",
-                god_luck_name: "1 in 100 Luck", god_luck_desc: "Multiplies total luck by 100x!",
-                profile_title: "CREATE IDENTITY", label_name: "Your Name", label_avatar: "Avatar", btn_start: "START JOURNEY",
-                status_active: "Status: Active"
-            },
-            es: {
-                gold_total: "Oro Total", auto_mining: "Auto-Minería", prestige: "Prestigio", rank_up: "Subir Rango", equipped: "Equipado", 
-                luck: "Suerte", resistance: "Resistencia", toolbox: "Caja de Herramientas", tab_equip: "Equipo", tab_auto: "Automatización", 
-                tab_upgrades: "Mejoras", prestige_title: "Avance de Rango", prestige_desc: "Reinicia el progreso por poder permanente.",
-                prestige_cost: "Costo:", cancel: "Cancelar", acquired: "Adquirido", buy: "Comprar", damage: "Daño",
-                luck_upgrade_name: "Amuleto de Suerte", luck_upgrade_desc: "Más minerales raros.", level: "Nivel",
-                msg_break: "¡Rompiste {0}! (+{1} Oro)", msg_bought: "¡Compraste {0}!", msg_prestige: "¡RANGO UP! Nivel {0}",
-                skip_item: "Saltar Item", msg_skip: "Escáner activo: Item descartado.",
-                god_luck_name: "Suerte 1 en 100", god_luck_desc: "¡Multiplica tu suerte por 100x!",
-                profile_title: "CREAR IDENTIDAD", label_name: "Tu Nombre", label_avatar: "Avatar", btn_start: "EMPEZAR VIAJE",
-                status_active: "Estado: Activo"
-            }
-        };
-
-        const AVATARS = ["👤", "👨‍🚀", "👷", "🤖", "🦊", "😎", "👾", "🐉", "🧛", "🧟", "🧙", "🐱"];
-
-        const TOOLS = [
-            { id: 0, name: {pt:"Mãos Nuas", en:"Bare Hands", es:"Manos Nuas"}, damage: 2, icon: "✋", cost: 0, owned: true, elite: false },
-            { id: 1, name: {pt:"Picareta de Madeira", en:"Wooden Pickaxe", es:"Pico de Madera"}, damage: 12, icon: "⛏️", cost: 50, owned: false, elite: false },
-            { id: 2, name: {pt:"Picareta de Pedra", en:"Stone Pickaxe", es:"Pico de Piedra"}, damage: 35, icon: "🔨", cost: 250, owned: false, elite: false },
-            { id: 3, name: {pt:"Picareta de Ferro", en:"Iron Pickaxe", es:"Pico de Hierro"}, damage: 95, icon: "🔧", cost: 1000, owned: false, elite: false },
-            { id: 4, name: {pt:"Picareta de Ouro", en:"Golden Pickaxe", es:"Pico de Oro"}, damage: 250, icon: "✨", cost: 3500, owned: false, elite: false },
-            { id: 5, name: {pt:"Picareta de Diamante", en:"Diamond Pickaxe", es:"Pico de Diamante"}, damage: 650, icon: "💎", cost: 12000, owned: false, elite: false },
-            { id: 6, name: {pt:"Broca de Plasma", en:"Plasma Drill", es:"Taladro Plasma"}, damage: 1800, icon: "🔥", cost: 45000, owned: false, elite: false },
-            { id: 7, name: {pt:"Lâmina Vibratória", en:"Vibroblade", es:"Hoja Vibrante"}, damage: 6000, icon: "⚔️", cost: 200000, owned: false, elite: true, reqRank: 1 },
-            { id: 8, name: {pt:"Desintegrador", en:"Disintegrator", es:"Desintegrador"}, damage: 25000, icon: "⚛️", cost: 800000, owned: false, elite: true, reqRank: 2 },
-            { id: 9, name: {pt:"Fissurador Galáctico", en:"Galactic Splitter", es:"Fisurador Galáctico"}, damage: 100000, icon: "🌀", cost: 3500000, owned: false, elite: true, reqRank: 3 },
-            { id: 10, name: {pt:"O Infinito", en:"The Infinity", es:"El Infinito"}, damage: 99999999999, icon: "♾️", cost: 500000000, owned: false, elite: true, reqRank: 5 }
-        ];
-
-        const AUTO_MINERS = [
-            { id: 0, name: {pt:"Robô Clicker", en:"Clicker Bot", es:"Robot Clicker"}, dps: 5, cost: 150, owned: 0, icon: "🤖" },
-            { id: 1, name: {pt:"Equipe Mineira", en:"Mining Team", es:"Equipo Minero"}, dps: 70, cost: 2000, owned: 0, icon: "👥" },
-            { id: 2, name: {pt:"Drone Orbital", en:"Orbital Drone", es:"Dron Orbital"}, dps: 450, cost: 20000, owned: 0, icon: "🛰️" },
-            { id: 3, name: {pt:"Laser Planetário", en:"Planetary Laser", es:"Láser Planetario"}, dps: 2500, cost: 150000, owned: 0, icon: "📡" },
-            { id: 4, name: {pt:"Fábrica Estelar", en:"Star Factory", es:"Fábrica Estelar"}, dps: 15000, cost: 1000000, owned: 0, icon: "🏭" },
-            { id: 5, name: {pt:"Buraco Negro", en:"Black Hole", es:"Agujero Negro"}, dps: 1000000, cost: 100000000, owned: 0, icon: "🕳️" },
-            { id: 6, name: {pt:"Desintegrador de Tudo", en:"All-Disintegrator", es:"Desintegrador de Todo"}, dps: 1000000000, cost: 5000000000, owned: 0, icon: "🌌", reqRank: 8 }
-        ];
-
-        const NODES = [
-            { id:0, name: {pt:"Poeira Estelar", en:"Stardust", es:"Polvo Estelar"}, hp: 40, reward: 5, color: "#94a3b8", rarity: 1 },
-            { id:1, name: {pt:"Rocha Comum", en:"Common Rock", es:"Roca Común"}, hp: 80, reward: 12, color: "#64748b", rarity: 1 },
-            { id:2, name: {pt:"Ferro", en:"Iron", es:"Hierro"}, hp: 200, reward: 35, color: "#cbd5e1", rarity: 1 },
-            { id:3, name: {pt:"Quartzo", en:"Quartz", es:"Cuarzo"}, hp: 450, reward: 100, color: "#f8fafc", rarity: 2 },
-            { id:4, name: {pt:"Ouro", en:"Gold", es:"Oro"}, hp: 1200, reward: 300, color: "#fbbf24", rarity: 2 },
-            { id:5, name: {pt:"Esmeralda", en:"Emerald", es:"Esmeralda"}, hp: 3000, reward: 800, color: "#10b981", rarity: 3 },
-            { id:6, name: {pt:"Rubi", en:"Ruby", es:"Rubí"}, hp: 7500, reward: 2200, color: "#ef4444", rarity: 4 },
-            { id:7, name: {pt:"Safira", en:"Sapphire", es:"Zafiro"}, hp: 15000, reward: 5000, color: "#3b82f6", rarity: 5 },
-            { id:23, name: {pt:"Imortalidade", en:"Immortality", es:"Inmortalidad"}, hp: 1000000000000, reward: 100000000000, color: "rainbow", rarity: 50 }
-        ];
-
-        let state = {
-            profile: { name: "Minerador", avatar: "👤" },
-            gold: 0, prestigeRank: 0, bonusMult: 1.0, luck: 1.0, luckLevel: 0, godLuckOwned: false, lang: 'pt',
-            activeToolIdx: 0, currentNodeIdx: 0, currentHP: 40, currentTab: 'tools', skipCooldown: false
-        };
-
-        let selectedAvatar = "👤";
-
-        function init() {
-            loadGame();
-            setLanguage(state.lang);
-            setupAvatarSelector();
             
-            if (!localStorage.getItem('mining_masters_v2')) {
-                document.getElementById('profile-modal').classList.remove('hidden');
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <!-- Inputs e Configurações -->
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-xs font-semibold text-slate-400 block mb-1">Nome do Artista</label>
+                        <input type="text" id="profile-name-input" placeholder="Van Gogh Local" class="w-full bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-2.5 rounded-xl text-sm focus:outline-none focus:border-brand-500 transition font-medium">
+                    </div>
+
+                    <div>
+                        <label class="text-xs font-semibold text-slate-400 block mb-2">Avatar do Perfil</label>
+                        <div class="grid grid-cols-2 gap-1 p-1 bg-slate-100 dark:bg-slate-950 rounded-xl mb-3">
+                            <button id="avatar-type-emoji" class="py-1 text-xs font-semibold rounded-lg bg-white dark:bg-slate-800 shadow-sm transition text-slate-800 dark:text-white">Emoji</button>
+                            <button id="avatar-type-url" class="py-1 text-xs font-semibold rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white transition font-medium">Link URL</button>
+                        </div>
+                        
+                        <!-- Emoji selector inputs -->
+                        <div id="wrapper-emoji-input" class="space-y-2">
+                            <div class="flex gap-2">
+                                <input type="text" id="profile-emoji-input" maxlength="2" value="🎨" class="w-12 text-center bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-2 rounded-xl text-lg focus:outline-none focus:border-brand-500 transition">
+                                <div class="flex-1 flex gap-1 bg-slate-100 dark:bg-slate-950 p-1.5 rounded-xl overflow-x-auto border border-slate-200/50 dark:border-slate-800">
+                                    <span class="emoji-selector p-1.5 text-lg hover:scale-125 transition cursor-pointer">🎨</span>
+                                    <span class="emoji-selector p-1.5 text-lg hover:scale-125 transition cursor-pointer">🖌️</span>
+                                    <span class="emoji-selector p-1.5 text-lg hover:scale-125 transition cursor-pointer">✨</span>
+                                    <span class="emoji-selector p-1.5 text-lg hover:scale-125 transition cursor-pointer">🦊</span>
+                                    <span class="emoji-selector p-1.5 text-lg hover:scale-125 transition cursor-pointer">🚀</span>
+                                    <span class="emoji-selector p-1.5 text-lg hover:scale-125 transition cursor-pointer">👾</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- URL selector inputs -->
+                        <div id="wrapper-url-input" class="space-y-1 hidden">
+                            <input type="url" id="profile-url-input" placeholder="https://exemplo.com/avatar.jpg" class="w-full bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-2.5 rounded-xl text-xs focus:outline-none focus:border-brand-500 font-mono transition">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Visual Card de Estatísticas -->
+                <div class="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 border border-slate-200 dark:border-slate-850 p-4 rounded-2xl flex flex-col justify-between shadow-inner">
+                    <div class="text-center py-4">
+                        <div id="profile-preview-avatar" class="w-20 h-20 mx-auto rounded-full bg-gradient-to-r from-teal-400 to-indigo-500 flex items-center justify-center text-white overflow-hidden font-bold text-3xl shadow-xl border-4 border-white dark:border-slate-800">
+                            <span id="preview-avatar-emoji">🎨</span>
+                            <img id="preview-avatar-img" class="w-full h-full object-cover hidden" src="" alt="Preview">
+                        </div>
+                        <h4 id="preview-name" class="font-bold text-lg mt-3 text-slate-950 dark:text-white">Seu Nome Visual</h4>
+                        <span class="text-[10px] uppercase font-bold text-brand-500 px-2.5 py-0.5 bg-brand-100 dark:bg-brand-950/40 rounded-full">Artista Certificado</span>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2 text-center border-t border-slate-200 dark:border-slate-800 pt-3">
+                        <div>
+                            <span class="block text-[10px] text-slate-400 font-bold uppercase">Artes Locais</span>
+                            <span id="stats-total-artworks" class="font-bold text-base text-slate-800 dark:text-slate-200">0</span>
+                        </div>
+                        <div>
+                            <span class="block text-[10px] text-slate-400 font-bold uppercase">Camadas Ativas</span>
+                            <span id="stats-total-layers" class="font-bold text-base text-slate-800 dark:text-slate-200">1</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-end space-x-3">
+                <button class="btn-close-profile-overlay px-5 py-2.5 rounded-xl text-xs font-semibold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition">Cancelar</button>
+                <button id="btn-submit-profile" class="px-6 py-2.5 rounded-xl text-xs font-bold bg-brand-500 hover:bg-brand-600 text-white transition flex items-center gap-1.5 shadow-lg shadow-brand-500/10">
+                    <i class="fa-solid fa-user-check"></i> Salvar Identidade
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: SAVE ARTWORK -->
+    <div id="modal-save" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-[1100] flex items-center justify-center opacity-0 pointer-events-none transition-all duration-300">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden p-6 transform translate-y-4 transition-all duration-300">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-bold text-lg flex items-center gap-2 text-slate-900 dark:text-white">
+                    <i class="fa-solid fa-file-signature text-brand-500"></i>
+                    Salvar Desenho Localmente
+                </h3>
+                <button class="btn-close-modal p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <div class="space-y-4 mb-6">
+                <div>
+                    <label class="text-xs font-semibold text-slate-500 block mb-1">Dê um nome para sua arte</label>
+                    <input type="text" id="save-art-title" placeholder="Ex: Meu Primeiro Universo" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-2.5 rounded-xl text-sm focus:outline-none focus:border-brand-500 transition">
+                </div>
+                <p class="text-xs text-slate-400 dark:text-slate-500">A arte será mesclada e arquivada com as camadas atuais, sendo salva na galeria rápida de desenhos.</p>
+            </div>
+
+            <div class="flex justify-end space-x-3">
+                <button class="btn-close-modal px-4 py-2 rounded-xl text-xs font-semibold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition">Cancelar</button>
+                <button id="btn-submit-save" class="px-5 py-2 rounded-xl text-xs font-semibold bg-brand-500 hover:bg-brand-600 text-white transition flex items-center gap-1.5 shadow">
+                    <i class="fa-solid fa-save"></i> Confirmar e Salvar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: GALLERY (Notepad style list) -->
+    <div id="modal-gallery" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-[1100] flex items-center justify-center opacity-0 pointer-events-none transition-all duration-300">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 w-full max-w-3xl rounded-2xl shadow-2xl overflow-hidden p-6 transform translate-y-4 transition-all duration-300 flex flex-col max-h-[85vh]">
+            <div class="flex justify-between items-center mb-4 border-b border-slate-100 dark:border-slate-800 pb-3">
+                <h3 class="font-bold text-lg flex items-center gap-2 text-slate-900 dark:text-white">
+                    <i class="fa-solid fa-note-sticky text-indigo-500"></i>
+                    Meus Desenhos Salvos
+                </h3>
+                <button class="btn-close-modal p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <!-- List Content -->
+            <div id="gallery-container" class="flex-1 overflow-y-auto min-h-[300px] max-h-[500px] pr-2">
+                <!-- Fallback empty state -->
+                <div id="gallery-empty" class="h-full flex flex-col items-center justify-center text-center py-12">
+                    <div class="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-2xl flex items-center justify-center text-slate-400 mb-4 border border-slate-200/50 dark:border-slate-700/50">
+                        <i class="fa-regular fa-folder-open text-2xl"></i>
+                    </div>
+                    <h4 class="font-semibold text-sm mb-1 text-slate-700 dark:text-slate-300">Nenhum desenho salvo ainda</h4>
+                    <p class="text-xs text-slate-400 dark:text-slate-500 max-w-xs">Crie algo fabuloso, clique em 'Salvar Desenho' para guardar seu progresso.</p>
+                </div>
+
+                <!-- Cards grid when populated -->
+                <div id="gallery-grid" class="grid grid-cols-1 md:grid-cols-3 gap-4 hidden">
+                    <!-- Dynamic loaded cards -->
+                </div>
+            </div>
+
+            <div class="border-t border-slate-100 dark:border-slate-800 pt-4 flex justify-end">
+                <button class="btn-close-modal px-5 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-xl transition">Fechar Galeria</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CUSTOM TOASTS (Alert feedback) -->
+    <div id="toast-container" class="fixed bottom-6 right-6 space-y-2.5 z-[1200] pointer-events-none max-w-sm"></div>
+
+    <!-- CORE DRAWING ENGINE SCRIPT -->
+    <script>
+        // DOM Elements
+        const canvasContainer = document.getElementById('canvas-layers-stack');
+        const canvasContainerWrapper = document.getElementById('canvas-container-wrapper');
+        const inputCanvas = document.getElementById('input-canvas');
+        const inputCtx = inputCanvas.getContext('2d');
+        
+        // Settings Inputs
+        const brushSizeInput = document.getElementById('brush-size');
+        const brushSizeDisplay = document.getElementById('brush-size-display');
+        const brushOpacityInput = document.getElementById('brush-opacity');
+        const brushOpacityDisplay = document.getElementById('brush-opacity-display');
+        
+        const colorPicker = document.getElementById('color-picker');
+        const colorPreview = document.getElementById('color-preview');
+        const canvasWidthInput = document.getElementById('canvas-width');
+        const canvasHeightInput = document.getElementById('canvas-height');
+        const btnResize = document.getElementById('btn-resize');
+        const shapeFillToggle = document.getElementById('shape-fill-toggle');
+        const coordinateDisplay = document.getElementById('coord-display');
+        
+        // Layers Panel Elements
+        const btnAddLayer = document.getElementById('btn-add-layer');
+        const btnMergeLayers = document.getElementById('btn-merge-layers');
+        const layerOpacitySlider = document.getElementById('layer-opacity-slider');
+        const activeLayerOpacityVal = document.getElementById('active-layer-opacity-val');
+        const layersListContainer = document.getElementById('layers-list');
+        const activeLayerStatus = document.getElementById('active-layer-status');
+
+        // New Element Queries for Draggable and Collapsible Panel
+        const layersPanel = document.getElementById('layers-panel');
+        const layersPanelHeader = document.getElementById('layers-panel-header');
+        const layersPanelContent = document.getElementById('layers-panel-content');
+        const btnMinimizeLayers = document.getElementById('btn-minimize-layers');
+        const btnCloseLayers = document.getElementById('btn-close-layers');
+        const btnToggleLayersPanel = document.getElementById('btn-toggle-layers-panel');
+
+        // Navigation / Modals / Profile Overlays
+        const btnDarkMode = document.getElementById('btn-dark-mode');
+        const btnHideUi = document.getElementById('btn-hide-ui');
+        const btnSaveArt = document.getElementById('btn-save-art');
+        const btnOpenGallery = document.getElementById('btn-open-gallery');
+        const modalSave = document.getElementById('modal-save');
+        const modalGallery = document.getElementById('modal-gallery');
+        
+        // New Profile Overlay Panel
+        const btnProfile = document.getElementById('btn-profile');
+        const modalProfileOverlay = document.getElementById('modal-profile-overlay');
+        const btnCloseProfileOverlayList = document.querySelectorAll('.btn-close-profile-overlay');
+        const profileNameInput = document.getElementById('profile-name-input');
+        const avatarTypeEmoji = document.getElementById('avatar-type-emoji');
+        const avatarTypeUrl = document.getElementById('avatar-type-url');
+        const wrapperEmojiInput = document.getElementById('wrapper-emoji-input');
+        const wrapperUrlInput = document.getElementById('wrapper-url-input');
+        const profileEmojiInput = document.getElementById('profile-emoji-input');
+        const profileUrlInput = document.getElementById('profile-url-input');
+        
+        const previewAvatarEmoji = document.getElementById('preview-avatar-emoji');
+        const previewAvatarImg = document.getElementById('preview-avatar-img');
+        const previewName = document.getElementById('preview-name');
+        
+        const headerAvatarEmoji = document.getElementById('header-avatar-emoji');
+        const headerAvatarImg = document.getElementById('header-avatar-img');
+        const userIdDisplay = document.getElementById('user-id-display');
+        const statsTotalArtworks = document.getElementById('stats-total-artworks');
+        const statsTotalLayers = document.getElementById('stats-total-layers');
+        const btnSubmitProfile = document.getElementById('btn-submit-profile');
+
+        const btnSubmitSave = document.getElementById('btn-submit-save');
+        const saveArtTitleInput = document.getElementById('save-art-title');
+        
+        // Structural Layout items for Immersive View
+        const mainHeader = document.getElementById('main-header');
+        const leftSidebar = document.getElementById('left-sidebar');
+        const canvasHeaderToolbar = document.getElementById('canvas-header-toolbar');
+        const canvasFooterStatus = document.getElementById('canvas-footer-status');
+        const floatingImmersiveHud = document.getElementById('floating-immersive-hud');
+        const floatingBtnRestore = document.getElementById('floating-btn-restore');
+
+        // Custom Swatches Elements
+        const customColorsContainer = document.getElementById('custom-colors-container');
+        const btnAddColor = document.getElementById('btn-add-color');
+        const clearCustomColors = document.getElementById('clear-custom-colors');
+
+        // STATE MANAGEMENT
+        let layers = [];
+        let activeLayerId = null;
+        let layerCounter = 1;
+        let canvasWidth = 800;
+        let canvasHeight = 550;
+
+        let isDrawing = false;
+        let startX = 0;
+        let startY = 0;
+        let currentTool = 'brush'; 
+        let currentColor = '#3b82f6';
+        let brushSize = 8;
+        let brushOpacity = 100;
+        let shapeFill = false;
+
+        let customColorsList = [];
+        let profileState = {
+            name: "Artista Local",
+            avatarType: "emoji", 
+            avatarEmoji: "🎨",
+            avatarUrl: ""
+        };
+
+        // Layers Snapshot Undo & Redo History System
+        let undoStack = [];
+        let redoStack = [];
+        const MAX_STACK_SIZE = 20;
+
+        // Custom Toast system
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `flex items-center space-x-2.5 px-4 py-3 rounded-xl border shadow-xl transform translate-y-4 opacity-0 transition-all duration-300 pointer-events-auto bg-white dark:bg-slate-900 ${
+                type === 'success' ? 'border-green-500/30 text-green-600 dark:text-green-400' :
+                type === 'error' ? 'border-rose-500/30 text-rose-600 dark:text-rose-400' :
+                'border-slate-500/30 text-slate-700 dark:text-slate-300'
+            }`;
+            
+            const icon = type === 'success' ? 'fa-solid fa-circle-check' :
+                         type === 'error' ? 'fa-solid fa-circle-exclamation' : 'fa-solid fa-info-circle';
+                         
+            toast.innerHTML = `
+                <i class="${icon}"></i>
+                <span class="text-xs font-semibold">${message}</span>
+            `;
+            
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.classList.remove('translate-y-4', 'opacity-0');
+            }, 50);
+
+            setTimeout(() => {
+                toast.classList.add('translate-y-4', 'opacity-0');
+                setTimeout(() => {
+                    toast.remove();
+                }, 300);
+            }, 4000);
+        }
+
+        // CANVAS & LAYER ARCHITECTURE
+        function initApp() {
+            canvasWidth = parseInt(canvasWidthInput.value) || 800;
+            canvasHeight = parseInt(canvasHeightInput.value) || 550;
+
+            resizeContainer(canvasWidth, canvasHeight);
+
+            // Carga inicial de camadas (Base e Desenho)
+            clearLayersStack();
+            createLayer("Plano de Fundo", true); // Base layer
+            createLayer("Camada Inicial", false); // Default Drawing layer
+
+            // Configurar histórico inicial
+            saveCanvasState();
+        }
+
+        function resizeContainer(w, h) {
+            canvasContainerWrapper.style.width = `${w}px`;
+            canvasContainerWrapper.style.height = `${h}px`;
+            inputCanvas.width = w;
+            inputCanvas.height = h;
+        }
+
+        function clearLayersStack() {
+            canvasContainer.innerHTML = '';
+            layers = [];
+            layerCounter = 1;
+        }
+
+        function createLayer(name = `Camada ${layerCounter++}`, isBase = false) {
+            const layerId = 'layer-' + Math.random().toString(36).substring(2, 9);
+            const canvasEl = document.createElement('canvas');
+            canvasEl.width = canvasWidth;
+            canvasEl.height = canvasHeight;
+            canvasEl.className = "canvas-layer absolute top-0 left-0 transition-opacity duration-150";
+            
+            if (isBase) {
+                canvasEl.classList.add('canvas-bg');
+                const ctx = canvasEl.getContext('2d', { willReadFrequently: true });
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, canvasWidth, canvasHeight);
             } else {
-                startAutoMiners();
-                spawnNextNode();
-                refreshAll();
+                canvasEl.style.backgroundColor = 'transparent';
             }
-        }
 
-        function setLanguage(l) {
-            state.lang = l;
-            document.querySelectorAll('[data-i18n]').forEach(el => {
-                const key = el.getAttribute('data-i18n');
-                el.innerText = I18N[l][key] || key;
-            });
-            // Update Profile labels
-            document.getElementById('profile-title').innerText = I18N[l].profile_title;
-            document.getElementById('label-name').innerText = I18N[l].label_name;
-            document.getElementById('label-avatar').innerText = I18N[l].label_avatar;
-            document.getElementById('btn-start').innerText = I18N[l].btn_start;
-            document.getElementById('status-label').innerText = I18N[l].status_active;
+            canvasContainer.appendChild(canvasEl);
 
-            refreshAll();
-            saveGame();
-        }
-
-        function setupAvatarSelector() {
-            const container = document.getElementById('avatar-selector');
-            AVATARS.forEach(av => {
-                const btn = document.createElement('button');
-                btn.className = "avatar-option w-full aspect-square bg-slate-900 rounded-xl flex items-center justify-center text-xl border-2 border-transparent hover:border-blue-400 transition";
-                btn.innerText = av;
-                btn.onclick = () => {
-                    document.querySelectorAll('.avatar-option').forEach(el => el.classList.remove('border-blue-500', 'bg-blue-900/20'));
-                    btn.classList.add('border-blue-500', 'bg-blue-900/20');
-                    selectedAvatar = av;
-                };
-                container.appendChild(btn);
-            });
-        }
-
-        function saveInitialProfile() {
-            const nameInput = document.getElementById('input-name').value.trim();
-            if (nameInput.length < 2) return;
-            state.profile.name = nameInput;
-            state.profile.avatar = selectedAvatar;
-            document.getElementById('profile-modal').classList.add('hidden');
-            saveGame();
-            startAutoMiners();
-            spawnNextNode();
-            refreshAll();
-        }
-
-        function saveGame() {
-            const saveData = {
-                profile: state.profile, gold: state.gold, prestigeRank: state.prestigeRank,
-                bonusMult: state.bonusMult, luck: state.luck, luckLevel: state.luckLevel,
-                godLuckOwned: state.godLuckOwned, activeToolIdx: state.activeToolIdx,
-                toolsOwned: TOOLS.map(t => t.owned), autoOwned: AUTO_MINERS.map(m => m.owned),
-                lang: state.lang
+            const layerObj = {
+                id: layerId,
+                name: name,
+                canvas: canvasEl,
+                ctx: canvasEl.getContext('2d', { willReadFrequently: true }),
+                visible: true,
+                opacity: 100
             };
-            localStorage.setItem('mining_masters_v2', JSON.stringify(saveData));
+
+            layers.push(layerObj);
+            updateLayersZIndexes();
+            setActiveLayer(layerId);
+            renderLayersUI();
+            
+            return layerObj;
         }
 
-        function loadGame() {
-            const saved = localStorage.getItem('mining_masters_v2');
-            if (saved) {
-                const data = JSON.parse(saved);
-                state.profile = data.profile || state.profile;
-                state.gold = data.gold;
-                state.prestigeRank = data.prestigeRank;
-                state.bonusMult = data.bonusMult;
-                state.luck = data.luck;
-                state.luckLevel = data.luckLevel;
-                state.godLuckOwned = data.godLuckOwned;
-                state.activeToolIdx = data.activeToolIdx;
-                state.lang = data.lang || 'pt';
-                if (data.toolsOwned) data.toolsOwned.forEach((owned, i) => { if(TOOLS[i]) TOOLS[i].owned = owned; });
-                if (data.autoOwned) data.autoOwned.forEach((qtd, i) => { if(AUTO_MINERS[i]) AUTO_MINERS[i].owned = qtd; });
+        function updateLayersZIndexes() {
+            // Reordena os canvas no DOM de acordo com a ordem do array (index 0 fica atrás, index final na frente)
+            layers.forEach((layer, index) => {
+                layer.canvas.style.zIndex = index;
+            });
+            // O inputCanvas de preview e cliques sempre fica no topo
+            inputCanvas.style.zIndex = 999;
+        }
+
+        function setActiveLayer(layerId) {
+            activeLayerId = layerId;
+            const activeL = layers.find(l => l.id === activeLayerId);
+            if (activeL) {
+                activeLayerStatus.innerText = `Camada Ativa: ${activeL.name}`;
+                layerOpacitySlider.value = activeL.opacity;
+                activeLayerOpacityVal.innerText = `${activeL.opacity}%`;
             }
+            // Habilitar ou desabilitar botão de mesclar para baixo
+            const index = layers.findIndex(l => l.id === activeLayerId);
+            btnMergeLayers.disabled = (index <= 0); // Desabilitado se for a camada mais abaixo
+
+            renderLayersUI();
         }
 
-        function resetGameData() {
-            if (confirm("Confirm Reset?")) {
-                localStorage.removeItem('mining_masters_v2');
-                location.reload();
+        function renderLayersUI() {
+            layersListContainer.innerHTML = '';
+            
+            // Renderiza do topo para a base (para que a camada superior apareça em cima no painel)
+            [...layers].reverse().forEach((layer) => {
+                const isActive = layer.id === activeLayerId;
+                const row = document.createElement('div');
+                row.className = `flex flex-col p-2.5 rounded-xl border text-xs transition ${
+                    isActive 
+                        ? 'bg-brand-50/70 border-brand-500/50 dark:bg-brand-950/20 dark:border-brand-500/50 text-slate-900 dark:text-white' 
+                        : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300'
+                }`;
+
+                row.innerHTML = `
+                    <div class="flex items-center justify-between mb-2 cursor-pointer min-w-0" onclick="setActiveLayer('${layer.id}')">
+                        <div class="flex items-center gap-1.5 min-w-0 flex-1">
+                            <i class="fa-solid fa-grip-vertical text-slate-400"></i>
+                            <span class="font-bold truncate text-[11px]">${layer.name}</span>
+                        </div>
+                        <span class="text-[9px] text-slate-400 font-mono bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded-md font-bold">${layer.opacity}%</span>
+                    </div>
+                    <!-- Área maior e espaçosa para ações de camada (Target de Clique de 64x40px) -->
+                    <div class="flex items-center justify-between border-t border-slate-100 dark:border-slate-800 pt-2 gap-1">
+                        <!-- Visibilidade -->
+                        <button onclick="toggleLayerVisibility('${layer.id}', event)" class="w-[64px] h-10 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/80 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white transition-all text-sm" title="Esconder/Mostrar">
+                            <i class="fa-solid ${layer.visible ? 'fa-eye' : 'fa-eye-slash'}"></i>
+                        </button>
+                        
+                        <!-- Mover para Cima -->
+                        <button onclick="moveLayer('${layer.id}', 1, event)" class="w-[64px] h-10 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/80 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 hover:text-brand-500 transition-all text-sm" title="Mover para Cima">
+                            <i class="fa-solid fa-arrow-up"></i>
+                        </button>
+
+                        <!-- Mover para Baixo -->
+                        <button onclick="moveLayer('${layer.id}', -1, event)" class="w-[64px] h-10 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/80 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 hover:text-brand-500 transition-all text-sm" title="Mover para Baixo">
+                            <i class="fa-solid fa-arrow-down"></i>
+                        </button>
+
+                        <!-- Excluir -->
+                        <button onclick="deleteLayer('${layer.id}', event)" class="w-[64px] h-10 flex items-center justify-center rounded-lg bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/20 dark:hover:bg-rose-900/30 text-rose-500 hover:text-rose-600 transition-all text-sm" title="Excluir Camada">
+                            <i class="fa-regular fa-trash-can"></i>
+                        </button>
+                    </div>
+                `;
+                layersListContainer.appendChild(row);
+            });
+            
+            // Atualizar contagem de estatísticas
+            statsTotalLayers.innerText = layers.length;
+        }
+
+        // CONTROLES DE CAMADAS
+        window.toggleLayerVisibility = function(layerId, event) {
+            if (event) event.stopPropagation();
+            const layer = layers.find(l => l.id === layerId);
+            if (layer) {
+                layer.visible = !layer.visible;
+                layer.canvas.style.display = layer.visible ? 'block' : 'none';
+                renderLayersUI();
+                saveCanvasState();
             }
-        }
+        };
 
-        document.getElementById('resource-node').addEventListener('mousedown', (e) => {
-            const tool = TOOLS[state.activeToolIdx];
-            applyDamage(tool.damage * state.bonusMult, e.clientX, e.clientY);
-            document.getElementById('resource-node').classList.add('shake');
-            setTimeout(() => document.getElementById('resource-node').classList.remove('shake'), 100);
+        window.moveLayer = function(layerId, direction, event) {
+            if (event) event.stopPropagation();
+            const index = layers.findIndex(l => l.id === layerId);
+            if (index === -1) return;
+
+            const targetIndex = index + direction;
+            if (targetIndex < 0 || targetIndex >= layers.length) return; // Limites alcançados
+
+            // Swap das posições no array de camadas
+            const temp = layers[index];
+            layers[index] = layers[targetIndex];
+            layers[targetIndex] = temp;
+
+            updateLayersZIndexes();
+            renderLayersUI();
+            saveCanvasState();
+        };
+
+        window.deleteLayer = function(layerId, event) {
+            if (event) event.stopPropagation();
+            if (layers.length <= 1) {
+                showToast("Você precisa ter pelo menos 1 camada!", "error");
+                return;
+            }
+
+            const index = layers.findIndex(l => l.id === layerId);
+            if (index === -1) return;
+
+            // Remove o Canvas do DOM
+            layers[index].canvas.remove();
+            layers.splice(index, 1);
+
+            // Reajusta a camada ativa caso necessário
+            if (activeLayerId === layerId) {
+                setActiveLayer(layers[layers.length - 1].id);
+            } else {
+                setActiveLayer(activeLayerId);
+            }
+
+            updateLayersZIndexes();
+            renderLayersUI();
+            saveCanvasState();
+            showToast("Camada removida", "info");
+        };
+
+        // Adicionar nova camada via botão do painel
+        btnAddLayer.addEventListener('click', () => {
+            const lyr = createLayer();
+            saveCanvasState();
+            showToast(`"${lyr.name}" adicionada!`, "success");
         });
 
-        function skipItem() {
-            if (state.skipCooldown) return;
-            addLog(I18N[state.lang].msg_skip);
-            spawnNextNode();
-            refreshAll();
-            state.skipCooldown = true;
-            const btn = document.getElementById('skip-btn');
-            const timerEl = document.getElementById('skip-timer');
-            btn.disabled = true;
-            timerEl.classList.remove('hidden');
-            let timeLeft = 15;
-            const interval = setInterval(() => {
-                timeLeft--;
-                timerEl.innerText = `${timeLeft}s`;
-                if (timeLeft <= 0) {
-                    clearInterval(interval);
-                    state.skipCooldown = false;
-                    btn.disabled = false;
-                    timerEl.classList.add('hidden');
+        // Mesclar ativa com a camada abaixo
+        btnMergeLayers.addEventListener('click', () => {
+            const index = layers.findIndex(l => l.id === activeLayerId);
+            if (index <= 0) {
+                showToast("Não existe camada abaixo para mesclar!", "error");
+                return;
+            }
+
+            const currentL = layers[index];
+            const lowerL = layers[index - 1];
+
+            // Renderiza o conteúdo atual sobre a inferior respeitando a opacidade
+            lowerL.ctx.save();
+            lowerL.ctx.globalAlpha = currentL.opacity / 100;
+            lowerL.ctx.drawImage(currentL.canvas, 0, 0);
+            lowerL.ctx.restore();
+
+            // Exclui a camada atual do DOM e do Array
+            currentL.canvas.remove();
+            layers.splice(index, 1);
+
+            setActiveLayer(lowerL.id);
+            updateLayersZIndexes();
+            renderLayersUI();
+            saveCanvasState();
+            showToast("Camadas mescladas!", "success");
+        });
+
+        // Controle da opacidade de cada camada individualmente
+        layerOpacitySlider.addEventListener('input', (e) => {
+            const val = e.target.value;
+            activeLayerOpacityVal.innerText = `${val}%`;
+            
+            const activeL = layers.find(l => l.id === activeLayerId);
+            if (activeL) {
+                activeL.opacity = parseInt(val);
+                activeL.canvas.style.opacity = activeL.opacity / 100;
+            }
+        });
+
+        layerOpacitySlider.addEventListener('change', () => {
+            saveCanvasState();
+        });
+
+        // HISTÓRICO UNDO / REDO INTEGRAÇÃO DE CAMADAS
+        function saveCanvasState() {
+            if (undoStack.length >= MAX_STACK_SIZE) {
+                undoStack.shift();
+            }
+
+            // Mapeia todas as camadas existentes para guardar seu estado de canvas (imagem) completo
+            const stateSnapshot = layers.map(l => {
+                return {
+                    id: l.id,
+                    name: l.name,
+                    opacity: l.opacity,
+                    visible: l.visible,
+                    imageData: l.ctx.getImageData(0, 0, canvasWidth, canvasHeight)
+                };
+            });
+
+            undoStack.push({
+                layers: stateSnapshot,
+                activeLayerId: activeLayerId
+            });
+
+            redoStack = [];
+            updateUndoRedoButtons();
+        }
+
+        function updateUndoRedoButtons() {
+            document.getElementById('btn-undo').disabled = undoStack.length <= 1;
+            document.getElementById('btn-redo').disabled = redoStack.length === 0;
+        }
+
+        function undo() {
+            if (undoStack.length > 1) {
+                redoStack.push(undoStack.pop());
+                const previousState = undoStack[undoStack.length - 1];
+                restoreLayersSnapshot(previousState);
+                updateUndoRedoButtons();
+            }
+        }
+
+        function redo() {
+            if (redoStack.length > 0) {
+                const nextState = redoStack.pop();
+                undoStack.push(nextState);
+                restoreLayersSnapshot(nextState);
+                updateUndoRedoButtons();
+            }
+        }
+
+        function restoreLayersSnapshot(snapshot) {
+            // Limpa o canvas das camadas anteriores do DOM
+            layers.forEach(l => l.canvas.remove());
+            layers = [];
+
+            // Reconstrói as camadas do Snapshot
+            snapshot.layers.forEach((snap, idx) => {
+                const canvasEl = document.createElement('canvas');
+                canvasEl.width = canvasWidth;
+                canvasEl.height = canvasHeight;
+                canvasEl.className = "canvas-layer absolute top-0 left-0 transition-opacity duration-150";
+                
+                if (idx === 0) {
+                    canvasEl.classList.add('canvas-bg');
+                } else {
+                    canvasEl.style.backgroundColor = 'transparent';
                 }
+
+                canvasEl.style.opacity = snap.opacity / 100;
+                canvasEl.style.display = snap.visible ? 'block' : 'none';
+
+                canvasContainer.appendChild(canvasEl);
+
+                const ctx = canvasEl.getContext('2d', { willReadFrequently: true });
+                ctx.putImageData(snap.imageData, 0, 0);
+
+                layers.push({
+                    id: snap.id,
+                    name: snap.name,
+                    canvas: canvasEl,
+                    ctx: ctx,
+                    visible: snap.visible,
+                    opacity: snap.opacity
+                });
+            });
+
+            // Recoloca o inputCanvas no topo para controle
+            canvasContainer.appendChild(inputCanvas);
+
+            updateLayersZIndexes();
+            setActiveLayer(snapshot.activeLayerId);
+            renderLayersUI();
+        }
+
+        // DRAWING LOGIC ON THE ACTIVE LAYER
+        let startPointX = 0;
+        let startPointY = 0;
+
+        inputCanvas.addEventListener('mousedown', startDrawingAction);
+        inputCanvas.addEventListener('mousemove', drawAction);
+        inputCanvas.addEventListener('mouseup', stopDrawingAction);
+        inputCanvas.addEventListener('mouseleave', stopDrawingAction);
+
+        // Mobile touch support
+        inputCanvas.addEventListener('touchstart', (e) => {
+            const touch = e.touches[0];
+            const mouseEvent = new MouseEvent("mousedown", {
+                clientX: touch.clientX,
+                clientY: touch.clientY
+            });
+            inputCanvas.dispatchEvent(mouseEvent);
+            e.preventDefault();
+        }, { passive: false });
+
+        inputCanvas.addEventListener('touchmove', (e) => {
+            const touch = e.touches[0];
+            const mouseEvent = new MouseEvent("mousemove", {
+                clientX: touch.clientX,
+                clientY: touch.clientY
+            });
+            inputCanvas.dispatchEvent(mouseEvent);
+            e.preventDefault();
+        }, { passive: false });
+
+        inputCanvas.addEventListener('touchend', (e) => {
+            const mouseEvent = new MouseEvent("mouseup", {});
+            inputCanvas.dispatchEvent(mouseEvent);
+            e.preventDefault();
+        }, { passive: false });
+
+        function startDrawingAction(e) {
+            const activeL = layers.find(l => l.id === activeLayerId);
+            if (!activeL) return;
+            if (!activeL.visible) {
+                showToast("A camada ativa está invisível!", "error");
+                return;
+            }
+
+            isDrawing = true;
+            const rect = inputCanvas.getBoundingClientRect();
+            startX = e.clientX - rect.left;
+            startY = e.clientY - rect.top;
+
+            // Configuração do contexto na camada ativa
+            const ctx = activeL.ctx;
+            ctx.beginPath();
+            ctx.lineWidth = brushSize;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            
+            // Configurar opacidade / transparência do traço
+            ctx.globalAlpha = brushOpacity / 100;
+
+            if (currentTool === 'eraser') {
+                ctx.globalCompositeOperation = 'destination-out';
+                // Borracha apaga de forma proporcional à opacidade configurada
+                ctx.strokeStyle = `rgba(0,0,0,1)`;
+            } else {
+                ctx.globalCompositeOperation = 'source-over';
+                ctx.strokeStyle = currentColor;
+                ctx.fillStyle = currentColor;
+            }
+
+            if (currentTool === 'fill') {
+                floodFill(activeL.ctx, Math.round(startX), Math.round(startY), currentColor);
+                saveCanvasState();
+                isDrawing = false;
+            } else if (currentTool === 'brush' || currentTool === 'eraser') {
+                ctx.moveTo(startX, startY);
+                ctx.lineTo(startX, startY);
+                ctx.stroke();
+            }
+        }
+
+        function drawAction(e) {
+            const rect = inputCanvas.getBoundingClientRect();
+            const currentX = Math.round(e.clientX - rect.left);
+            const currentY = Math.round(e.clientY - rect.top);
+
+            // Atualizar barra de coordenadas do rodapé
+            coordinateDisplay.innerText = `Coordenadas: ${currentX}px, ${currentY}px`;
+
+            if (!isDrawing) return;
+
+            const activeL = layers.find(l => l.id === activeLayerId);
+            if (!activeL) return;
+
+            if (currentTool === 'brush' || currentTool === 'eraser') {
+                activeL.ctx.lineTo(currentX, currentY);
+                activeL.ctx.stroke();
+            } else {
+                // Ferramentas de formas geométricas: limpa o inputCanvas e desenha o preview temporário
+                inputCtx.clearRect(0, 0, canvasWidth, canvasHeight);
+                drawPreviewShape(inputCtx, currentX, currentY);
+            }
+        }
+
+        function stopDrawingAction() {
+            if (isDrawing) {
+                isDrawing = false;
+                
+                const activeL = layers.find(l => l.id === activeLayerId);
+                if (activeL && (currentTool !== 'brush' && currentTool !== 'eraser' && currentTool !== 'fill')) {
+                    const rect = inputCanvas.getBoundingClientRect();
+                    // Desenha o formato final do preview para a camada ativa definitiva
+                    const finalX = Math.round(event.clientX - rect.left);
+                    const finalY = Math.round(event.clientY - rect.top);
+                    
+                    activeL.ctx.save();
+                    activeL.ctx.lineWidth = brushSize;
+                    activeL.ctx.lineCap = 'round';
+                    activeL.ctx.lineJoin = 'round';
+                    activeL.ctx.globalAlpha = brushOpacity / 100;
+                    activeL.ctx.globalCompositeOperation = 'source-over';
+                    activeL.ctx.strokeStyle = currentColor;
+                    activeL.ctx.fillStyle = currentColor;
+
+                    drawPreviewShape(activeL.ctx, finalX, finalY);
+                    activeL.ctx.restore();
+                }
+
+                // Limpa o canvas de preview
+                inputCtx.clearRect(0, 0, canvasWidth, canvasHeight);
+                saveCanvasState();
+            }
+        }
+
+        function drawPreviewShape(context, endX, endY) {
+            context.beginPath();
+            const width = endX - startX;
+            const height = endY - startY;
+
+            // Define estilo de renderização do preview
+            if (context === inputCtx) {
+                context.strokeStyle = currentColor;
+                context.fillStyle = currentColor;
+                context.lineWidth = brushSize;
+                context.globalAlpha = brushOpacity / 100;
+            }
+
+            switch (currentTool) {
+                case 'line':
+                    context.moveTo(startX, startY);
+                    context.lineTo(endX, endY);
+                    context.stroke();
+                    break;
+                case 'rect':
+                    if (shapeFill) {
+                        context.fillRect(startX, startY, width, height);
+                    } else {
+                        context.strokeRect(startX, startY, width, height);
+                    }
+                    break;
+                case 'circle':
+                    const radius = Math.sqrt(width * width + height * height);
+                    context.arc(startX, startY, radius, 0, 2 * Math.PI);
+                    if (shapeFill) {
+                        context.fill();
+                    } else {
+                        context.stroke();
+                    }
+                    break;
+                case 'triangle':
+                    context.moveTo(startX + width / 2, startY);
+                    context.lineTo(startX, endY);
+                    context.lineTo(endX, endY);
+                    context.closePath();
+                    if (shapeFill) {
+                        context.fill();
+                    } else {
+                        context.stroke();
+                    }
+                    break;
+                case 'star':
+                    drawStar(context, startX, startY, 5, Math.abs(width), Math.abs(width) / 2);
+                    break;
+            }
+        }
+
+        // Desenhar Estrela de Pontas
+        function drawStar(ctx, cx, cy, spikes, outerRadius, innerRadius) {
+            let rot = Math.PI / 2 * 3;
+            let x = cx;
+            let y = cy;
+            let step = Math.PI / spikes;
+
+            ctx.beginPath();
+            ctx.moveTo(cx, cy - outerRadius);
+            
+            for (let i = 0; i < spikes; i++) {
+                x = cx + Math.cos(rot) * outerRadius;
+                y = cy + Math.sin(rot) * outerRadius;
+                ctx.lineTo(x, y);
+                rot += step;
+
+                x = cx + Math.cos(rot) * innerRadius;
+                y = cy + Math.sin(rot) * innerRadius;
+                ctx.lineTo(x, y);
+                rot += step;
+            }
+            ctx.lineTo(cx, cy - outerRadius);
+            ctx.closePath();
+            
+            if (shapeFill) {
+                ctx.fill();
+            } else {
+                ctx.stroke();
+            }
+        }
+
+        // FLOOD FILL ALGORITHM
+        function floodFill(ctx, startX, startY, fillColor) {
+            const imageData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
+            const data = imageData.data;
+            const targetColor = getPixelColor(imageData, startX, startY);
+            const fillRGBA = hexToRGBA(fillColor);
+            
+            if (colorsMatch(targetColor, fillRGBA)) return;
+            
+            const queue = [[startX, startY]];
+            const width = canvasWidth;
+            const height = canvasHeight;
+            
+            while (queue.length > 0) {
+                const [x, y] = queue.pop();
+                const idx = (y * width + x) * 4;
+                
+                if (colorsMatch(getPixelColorAtIndex(data, idx), targetColor)) {
+                    setPixelColorAtIndex(data, idx, fillRGBA);
+                    
+                    if (x > 0) queue.push([x - 1, y]);
+                    if (x < width - 1) queue.push([x + 1, y]);
+                    if (y > 0) queue.push([x, y - 1]);
+                    if (y < height - 1) queue.push([x, y + 1]);
+                }
+            }
+            ctx.putImageData(imageData, 0, 0);
+        }
+
+        function getPixelColor(imageData, x, y) {
+            const idx = (y * imageData.width + x) * 4;
+            return [
+                imageData.data[idx],
+                imageData.data[idx + 1],
+                imageData.data[idx + 2],
+                imageData.data[idx + 3]
+            ];
+        }
+
+        function getPixelColorAtIndex(data, idx) {
+            return [data[idx], data[idx + 1], data[idx + 2], data[idx + 3]];
+        }
+
+        function setPixelColorAtIndex(data, idx, color) {
+            data[idx] = color[0];
+            data[idx + 1] = color[1];
+            data[idx + 2] = color[2];
+            data[idx + 3] = color[3];
+        }
+
+        function colorsMatch(c1, c2, threshold = 5) {
+            return Math.abs(c1[0] - c2[0]) <= threshold &&
+                   Math.abs(c1[1] - c2[1]) <= threshold &&
+                   Math.abs(c1[2] - c2[2]) <= threshold &&
+                   Math.abs(c1[3] - c2[3]) <= threshold;
+        }
+
+        function hexToRGBA(hex) {
+            let c = hex.substring(1);
+            if (c.length === 3) {
+                c = c[0] + c[0] + c[1] + c[1] + c[2] + c[2];
+            }
+            const num = parseInt(c, 16);
+            return [(num >> 16) & 255, (num >> 8) & 255, num & 255, 255];
+        }
+
+        // DOWNLOAD AND MERGE LAYERS
+        function getMergedCanvas() {
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = canvasWidth;
+            tempCanvas.height = canvasHeight;
+            const tempCtx = tempCanvas.getContext('2d');
+
+            // Fundo transparente por padrão se for PNG, ou branco se JPEG
+            tempCtx.fillStyle = '#ffffff';
+            tempCtx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+            // Redesenha todas as camadas visíveis aplicando opacidade correspondente
+            layers.forEach(layer => {
+                if (layer.visible) {
+                    tempCtx.save();
+                    tempCtx.globalAlpha = layer.opacity / 100;
+                    tempCtx.drawImage(layer.canvas, 0, 0);
+                    tempCtx.restore();
+                }
+            });
+
+            return tempCanvas;
+        }
+
+        document.querySelectorAll('.btn-download-format').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const format = e.currentTarget.getAttribute('data-format');
+                downloadCanvasImage(format);
+            });
+        });
+
+        function downloadCanvasImage(format) {
+            const mimeTypes = {
+                png: 'image/png',
+                jpeg: 'image/jpeg',
+                jpg: 'image/jpeg'
+            };
+
+            const merged = getMergedCanvas();
+            const link = document.createElement('a');
+            link.download = `arte-draw.${format}`;
+            link.href = merged.toDataURL(mimeTypes[format] || 'image/png', 0.95);
+            link.click();
+            showToast(`Download .${format.toUpperCase()} realizado!`, 'success');
+        }
+
+        // LIVE CANVAS MP4 RECORDING WITH LAYERS SUPPORT
+        let mediaRecorder = null;
+        let recordedChunks = [];
+        let recordInterval = null;
+        let secondsRecorded = 0;
+        let recordCanvas = null;
+        let recordCtx = null;
+        let recordRenderLoop = null;
+
+        const btnRecordMp4 = document.getElementById('btn-record-mp4');
+        const recordingHud = document.getElementById('recording-hud');
+        const recordingTime = document.getElementById('recording-time');
+        const btnStopRecording = document.getElementById('btn-stop-recording');
+
+        btnRecordMp4.addEventListener('click', startRecordingCanvas);
+        btnStopRecording.addEventListener('click', stopRecordingCanvas);
+
+        function startRecordingCanvas() {
+            recordedChunks = [];
+            secondsRecorded = 0;
+            recordingTime.innerText = "REC: 00:00";
+
+            // Cria um canvas em background consolidado para a gravação de vídeo (mesclando camadas ativamente a 30fps)
+            recordCanvas = document.createElement('canvas');
+            recordCanvas.width = canvasWidth;
+            recordCanvas.height = canvasHeight;
+            recordCtx = recordCanvas.getContext('2d');
+
+            // Loop de Rederização do Vídeo
+            recordRenderLoop = setInterval(() => {
+                recordCtx.fillStyle = '#ffffff';
+                recordCtx.fillRect(0, 0, canvasWidth, canvasHeight);
+                layers.forEach(l => {
+                    if (l.visible) {
+                        recordCtx.save();
+                        recordCtx.globalAlpha = l.opacity / 100;
+                        recordCtx.drawImage(l.canvas, 0, 0);
+                        recordCtx.restore();
+                    }
+                });
+                // Incluir traço/formas ao vivo do canvas de input
+                recordCtx.drawImage(inputCanvas, 0, 0);
+            }, 1000 / 30); // 30 FPS
+
+            let stream = null;
+            try {
+                stream = recordCanvas.captureStream(30); 
+            } catch (e) {
+                showToast("Gravação não suportada neste navegador.", "error");
+                clearInterval(recordRenderLoop);
+                return;
+            }
+
+            const options = MediaRecorder.isTypeSupported('video/mp4;codecs=h264') 
+                ? { mimeType: 'video/mp4;codecs=h264' } 
+                : { mimeType: 'video/webm;codecs=vp9' };
+
+            try {
+                mediaRecorder = new MediaRecorder(stream, options);
+            } catch (err) {
+                mediaRecorder = new MediaRecorder(stream);
+            }
+
+            mediaRecorder.ondataavailable = (e) => {
+                if (e.data && e.data.size > 0) {
+                    recordedChunks.push(e.data);
+                }
+            };
+
+            mediaRecorder.onstop = saveRecordedVideo;
+            mediaRecorder.start();
+
+            recordingHud.classList.remove('hidden');
+            showToast("Gravação iniciada. Pinte para registrar o progresso!", "info");
+
+            recordInterval = setInterval(() => {
+                secondsRecorded++;
+                const mins = String(Math.floor(secondsRecorded / 60)).padStart(2, '0');
+                const secs = String(secondsRecorded % 60).padStart(2, '0');
+                recordingTime.innerText = `REC: ${mins}:${secs}`;
             }, 1000);
         }
 
-        function spawnNextNode() {
-            const curLuck = state.godLuckOwned ? (state.luck * 100) : state.luck;
-            const maxRar = Math.min(100, (state.prestigeRank * 2) + 1 + Math.floor(curLuck/2));
-            const possible = NODES.filter(n => n.rarity <= maxRar);
-            const roll = Math.floor(Math.random() * possible.length);
-            state.currentNodeIdx = NODES.findIndex(n => n.id === possible[roll].id);
-            state.currentHP = NODES[state.currentNodeIdx].hp;
-        }
-
-        function applyDamage(amount, x = null, y = null) {
-            state.currentHP -= amount;
-            if (x && y) createFloatingText(x, y, `-${formatNumber(amount)}`, 'text-yellow-400');
-            if (state.currentHP <= 0) {
-                const node = NODES[state.currentNodeIdx];
-                const rew = node.reward * state.bonusMult;
-                state.gold += rew;
-                addLog(I18N[state.lang].msg_break.replace("{0}", node.name[state.lang]).replace("{1}", formatNumber(rew)));
-                spawnNextNode();
-                saveGame();
+        function stopRecordingCanvas() {
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                mediaRecorder.stop();
+                clearInterval(recordInterval);
+                clearInterval(recordRenderLoop);
+                recordingHud.classList.add('hidden');
             }
-            updateUI();
         }
 
-        function startAutoMiners() {
-            setInterval(() => {
-                let dps = 0;
-                AUTO_MINERS.forEach(m => dps += m.dps * m.owned);
-                if (dps > 0) applyDamage(dps * state.bonusMult / 10);
-                document.getElementById('auto-display').innerText = formatNumber(dps * state.bonusMult) + " / seg";
-                document.getElementById('gold-display').innerText = formatNumber(state.gold);
-            }, 100);
-            setInterval(saveGame, 10000);
+        function saveRecordedVideo() {
+            const blob = new Blob(recordedChunks, { type: 'video/mp4' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'arte-draw-processo.mp4';
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast("Vídeo MP4 salvo com sucesso!", "success");
         }
 
-        function switchTab(t) {
-            state.currentTab = t;
-            ['tools', 'auto', 'upgrades'].forEach(id => document.getElementById(`tab-${id}`).classList.remove('bg-slate-700', 'text-white'));
-            document.getElementById(`tab-${t}`).classList.add('bg-slate-700', 'text-white');
-            renderShop();
+        // CANVAS RESIZING WITHOUT LOSS OF DRAWINGS
+        btnResize.addEventListener('click', () => {
+            const newW = parseInt(canvasWidthInput.value);
+            const newH = parseInt(canvasHeightInput.value);
+
+            if (newW < 100 || newH < 100 || newW > 3000 || newH > 3000) {
+                showToast("Dimensões suportadas: de 100px até 3000px.", "error");
+                return;
+            }
+
+            // Realiza backup de cada camada existente
+            const backups = layers.map(layer => {
+                const temp = document.createElement('canvas');
+                temp.width = layer.canvas.width;
+                temp.height = layer.canvas.height;
+                const tempCtx = temp.getContext('2d');
+                tempCtx.drawImage(layer.canvas, 0, 0);
+                return {
+                    id: layer.id,
+                    canvas: temp
+                };
+            });
+
+            canvasWidth = newW;
+            canvasHeight = newH;
+            resizeContainer(newW, newH);
+
+            // Redimensiona e restaura os desenhos originais
+            layers.forEach(layer => {
+                layer.canvas.width = newW;
+                layer.canvas.height = newH;
+                
+                // Reaplica fundo se for a camada base
+                if (layer.id === layers[0].id) {
+                    layer.ctx.fillStyle = '#ffffff';
+                    layer.ctx.fillRect(0, 0, newW, newH);
+                }
+
+                const bk = backups.find(b => b.id === layer.id);
+                if (bk) {
+                    layer.ctx.drawImage(bk.canvas, 0, 0);
+                }
+            });
+
+            saveCanvasState();
+            showToast(`Quadro redimensionado para ${newW}x${newH}px`, 'success');
+        });
+
+        // CUSTOM COLORS PALETTE
+        function loadCustomColors() {
+            const stored = localStorage.getItem('draw_custom_colors');
+            customColorsList = stored ? JSON.parse(stored) : [];
+            renderCustomColors();
         }
 
-        function renderShop() {
-            const container = document.getElementById('shop-container');
-            container.innerHTML = '';
-            if (state.currentTab === 'tools') {
-                TOOLS.forEach((tool, i) => {
-                    if (i === 0 || (tool.elite && state.prestigeRank < tool.reqRank && !tool.owned)) return;
-                    container.innerHTML += `
-                        <div class="p-3 rounded-xl border-2 ${tool.owned ? 'bg-slate-900 border-green-900 opacity-60' : 'bg-slate-800 border-slate-700'} flex justify-between items-center">
-                            <div class="flex items-center gap-3">
-                                <span class="text-2xl">${tool.icon}</span>
-                                <div><h4 class="font-bold text-xs ${tool.elite ? 'text-purple-400' : ''}">${tool.name[state.lang]}</h4><p class="text-[9px] text-slate-500">${I18N[state.lang].damage}: ${formatNumber(tool.damage)}</p></div>
-                            </div>
-                            ${tool.owned ? `<span class="text-[9px] text-green-500 font-bold">${I18N[state.lang].acquired}</span>` : `<button onclick="buyTool(${i})" class="bg-blue-600 px-3 py-1 rounded-lg text-[10px] font-bold">${formatNumber(tool.cost)}</button>`}
-                        </div>`;
-                });
-            } else if (state.currentTab === 'auto') {
-                AUTO_MINERS.forEach((m, i) => {
-                    if (m.reqRank && state.prestigeRank < m.reqRank) return;
-                    const cost = Math.floor(m.cost * Math.pow(1.3, m.owned));
-                    container.innerHTML += `<div class="p-3 rounded-xl border-2 border-slate-700 bg-slate-800 flex justify-between items-center"><div class="flex items-center gap-3"><span class="text-2xl">${m.icon}</span><div><h4 class="font-bold text-xs">${m.name[state.lang]}</h4><p class="text-[9px] text-slate-500">DPS: +${formatNumber(m.dps)} | Qtd: ${m.owned}</p></div></div><button onclick="buyAuto(${i})" class="bg-green-700 px-3 py-1 rounded-lg text-[10px] font-bold">${formatNumber(cost)}</button></div>`;
+        btnAddColor.addEventListener('click', () => {
+            const selected = colorPicker.value;
+            if (!customColorsList.includes(selected)) {
+                customColorsList.push(selected);
+                localStorage.setItem('draw_custom_colors', JSON.stringify(customColorsList));
+                renderCustomColors();
+                showToast("Cor memorizada!", "success");
+            } else {
+                showToast("Esta cor já está na sua lista!", "info");
+            }
+        });
+
+        clearCustomColors.addEventListener('click', () => {
+            customColorsList = [];
+            localStorage.setItem('draw_custom_colors', JSON.stringify([]));
+            renderCustomColors();
+            showToast("Lista customizada limpa.", "info");
+        });
+
+        function renderCustomColors() {
+            customColorsContainer.innerHTML = '';
+            if (customColorsList.length > 0) {
+                clearCustomColors.classList.remove('hidden');
+                customColorsList.forEach(color => {
+                    const swatch = document.createElement('div');
+                    swatch.className = "color-swatch w-6 h-6 rounded-md cursor-pointer border border-slate-300 dark:border-slate-700 hover:scale-110 transition shadow-sm";
+                    swatch.style.backgroundColor = color;
+                    swatch.setAttribute('data-color', color);
+                    swatch.setAttribute('title', color);
+                    customColorsContainer.appendChild(swatch);
                 });
             } else {
-                const luckCost = Math.floor(500 * Math.pow(2.5, state.luckLevel));
-                container.innerHTML += `<div class="p-4 rounded-xl border-2 border-yellow-800 bg-slate-800 flex justify-between items-center mb-3"><div class="flex items-center gap-4"><span class="text-3xl">🍀</span><div><h4 class="font-bold text-sm text-yellow-500">${I18N[state.lang].luck_upgrade_name}</h4><p class="text-[10px] text-slate-400">${I18N[state.lang].luck_upgrade_desc}</p><p class="text-[10px] text-yellow-600 font-bold">${I18N[state.lang].level}: ${state.luckLevel}</p></div></div><button onclick="buyLuck()" class="bg-yellow-600 px-4 py-2 rounded-lg text-xs font-bold">${formatNumber(luckCost)}</button></div>`;
-                const godLuckCost = 1000000000;
-                container.innerHTML += `<div class="p-4 rounded-xl border-2 border-purple-800 bg-slate-900 flex justify-between items-center ${state.godLuckOwned ? 'opacity-50' : ''}"><div class="flex items-center gap-4"><span class="text-3xl">✨</span><div><h4 class="font-bold text-sm text-purple-400">${I18N[state.lang].god_luck_name}</h4><p class="text-[10px] text-slate-400">${I18N[state.lang].god_luck_desc}</p></div></div>${state.godLuckOwned ? `<span class="text-xs text-purple-500 font-bold">ATIVADO</span>` : `<button onclick="buyGodLuck()" class="bg-purple-600 px-4 py-2 rounded-lg text-xs font-bold">${formatNumber(godLuckCost)}</button>`}</div>`;
+                clearCustomColors.classList.add('hidden');
             }
         }
 
-        function buyTool(idx) { if (state.gold >= TOOLS[idx].cost) { state.gold -= TOOLS[idx].cost; TOOLS[idx].owned = true; state.activeToolIdx = idx; refreshAll(); saveGame(); } }
-        function buyAuto(idx) { const cost = Math.floor(AUTO_MINERS[idx].cost * Math.pow(1.3, AUTO_MINERS[idx].owned)); if (state.gold >= cost) { state.gold -= cost; AUTO_MINERS[idx].owned++; refreshAll(); saveGame(); } }
-        function buyLuck() { const cost = Math.floor(500 * Math.pow(2.5, state.luckLevel)); if (state.gold >= cost) { state.gold -= cost; state.luckLevel++; state.luck += 0.5; refreshAll(); saveGame(); } }
-        function buyGodLuck() { if (!state.godLuckOwned && state.gold >= 1000000000) { state.gold -= 1000000000; state.godLuckOwned = true; refreshAll(); saveGame(); } }
+        // Event delegation for standard and dynamic swatches
+        document.addEventListener('click', (e) => {
+            const swatch = e.target.closest('.color-swatch');
+            if (swatch) {
+                currentColor = swatch.getAttribute('data-color');
+                colorPicker.value = currentColor;
+                colorPreview.style.backgroundColor = currentColor;
+            }
+        });
 
-        function showPrestigeModal() {
-            const cost = 10000 * Math.pow(10, state.prestigeRank);
-            document.getElementById('prestige-cost').innerText = formatNumber(cost);
-            document.getElementById('confirm-prestige-btn').disabled = state.gold < cost;
-            document.getElementById('prestige-modal').classList.remove('hidden');
-        }
+        colorPicker.addEventListener('input', (e) => {
+            currentColor = e.target.value;
+            colorPreview.style.backgroundColor = currentColor;
+        });
 
-        function closePrestigeModal() { document.getElementById('prestige-modal').classList.add('hidden'); }
+        // Inputs & Event Listeners
+        brushSizeInput.addEventListener('input', (e) => {
+            brushSize = parseInt(e.target.value);
+            brushSizeDisplay.innerText = `${brushSize} px`;
+        });
 
-        function executePrestige() {
-            const cost = 10000 * Math.pow(10, state.prestigeRank);
-            if (state.gold < cost) return;
-            state.gold = 0; state.prestigeRank++; state.bonusMult = (state.prestigeRank + 1) * 2;
-            TOOLS.forEach((t, i) => { if (i !== 0 && !t.elite) t.owned = false; });
-            AUTO_MINERS.forEach(m => m.owned = 0);
-            state.activeToolIdx = 0;
-            closePrestigeModal(); spawnNextNode(); refreshAll(); saveGame();
-        }
+        brushOpacityInput.addEventListener('input', (e) => {
+            brushOpacity = parseInt(e.target.value);
+            brushOpacityDisplay.innerText = `${brushOpacity}%`;
+        });
 
-        function refreshAll() {
-            document.getElementById('player-name').innerText = state.profile.name;
-            document.getElementById('player-avatar').innerText = state.profile.avatar;
-            document.getElementById('gold-display').innerText = formatNumber(state.gold);
-            document.getElementById('rank-display').innerText = state.prestigeRank;
-            document.getElementById('bonus-display').innerText = "x" + state.bonusMult.toFixed(1);
-            const luckDisp = state.godLuckOwned ? (state.luck * 100) : state.luck;
-            document.getElementById('luck-display').innerText = luckDisp.toFixed(1);
-            const tool = TOOLS[state.activeToolIdx];
-            document.getElementById('equipped-name').innerText = tool.name[state.lang];
-            document.getElementById('equipped-icon').innerText = tool.icon;
-            renderInventory(); renderShop(); updateUI();
-        }
+        shapeFillToggle.addEventListener('change', (e) => {
+            shapeFill = e.target.checked;
+        });
 
-        function renderInventory() {
-            const grid = document.getElementById('inventory-grid'); grid.innerHTML = '';
-            TOOLS.forEach((t, i) => { if (t.owned) {
-                const slot = document.createElement('div');
-                slot.className = `inventory-slot ${state.activeToolIdx === i ? 'active' : ''}`;
-                slot.innerHTML = `<span class="text-xl">${t.icon}</span>`;
-                slot.onclick = () => { state.activeToolIdx = i; refreshAll(); saveGame(); };
-                grid.appendChild(slot);
-            }});
-        }
-
-        function updateUI() {
-            const node = NODES[state.currentNodeIdx];
-            if(!node) return;
-            const pct = (state.currentHP / node.hp) * 100;
-            document.getElementById('progress-fill').style.width = `${Math.max(0, pct)}%`;
-            document.getElementById('health-text').innerText = `${formatNumber(state.currentHP)} / ${formatNumber(node.hp)}`;
-            document.getElementById('node-type').innerText = node.name[state.lang];
-            const nIco = document.getElementById('node-icon');
-            const nTyp = document.getElementById('node-type');
-            if(node.color === 'rainbow') {
-                nIco.style.fill = 'white'; nTyp.className = "font-black text-lg uppercase tracking-tight rainbow-text";
-                document.getElementById('resource-node').style.borderColor = 'white';
+        // OVERLAY PROFILE ACCOUNT LOGIC
+        function loadUserProfile() {
+            const stored = localStorage.getItem('draw_user_profile');
+            if (stored) {
+                profileState = JSON.parse(stored);
             } else {
-                nIco.style.fill = node.color; nTyp.className = "font-black text-slate-200 text-lg uppercase tracking-tight";
-                document.getElementById('resource-node').style.borderColor = node.color;
+                profileState = {
+                    name: "Artista Local",
+                    avatarType: "emoji",
+                    avatarEmoji: "🎨",
+                    avatarUrl: ""
+                };
+                localStorage.setItem('draw_user_profile', JSON.stringify(profileState));
+            }
+            updateProfileUI();
+        }
+
+        function updateProfileUI() {
+            userIdDisplay.innerText = profileState.name;
+            previewName.innerText = profileState.name;
+
+            if (profileState.avatarType === 'emoji') {
+                headerAvatarEmoji.innerText = profileState.avatarEmoji;
+                previewAvatarEmoji.innerText = profileState.avatarEmoji;
+                headerAvatarEmoji.classList.remove('hidden');
+                previewAvatarEmoji.classList.remove('hidden');
+                headerAvatarImg.classList.add('hidden');
+                previewAvatarImg.classList.add('hidden');
+            } else {
+                const urlVal = profileState.avatarUrl || 'https://placehold.co/100x100?text=🎨';
+                headerAvatarImg.src = urlVal;
+                previewAvatarImg.src = urlVal;
+
+                headerAvatarImg.onerror = function() {
+                    headerAvatarImg.src = 'https://placehold.co/100x100?text=🎨';
+                };
+                previewAvatarImg.onerror = function() {
+                    previewAvatarImg.src = 'https://placehold.co/100x100?text=🎨';
+                };
+
+                headerAvatarImg.classList.remove('hidden');
+                previewAvatarImg.classList.remove('hidden');
+                headerAvatarEmoji.classList.add('hidden');
+                previewAvatarEmoji.classList.add('hidden');
+            }
+
+            profileNameInput.value = profileState.name;
+            profileEmojiInput.value = profileState.avatarEmoji;
+            profileUrlInput.value = profileState.avatarUrl;
+
+            syncProfileAvatarType(profileState.avatarType);
+        }
+
+        function syncProfileAvatarType(type) {
+            profileState.avatarType = type;
+            if (type === 'emoji') {
+                avatarTypeEmoji.className = "py-1 text-xs font-semibold rounded-lg bg-white dark:bg-slate-800 shadow-sm transition text-slate-800 dark:text-white";
+                avatarTypeUrl.className = "py-1 text-xs font-semibold rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white transition font-medium";
+                wrapperEmojiInput.classList.remove('hidden');
+                wrapperUrlInput.classList.add('hidden');
+            } else {
+                avatarTypeUrl.className = "py-1 text-xs font-semibold rounded-lg bg-white dark:bg-slate-800 shadow-sm transition text-slate-800 dark:text-white";
+                avatarTypeEmoji.className = "py-1 text-xs font-semibold rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white transition font-medium";
+                wrapperUrlInput.classList.remove('hidden');
+                wrapperEmojiInput.classList.add('hidden');
+            }
+            updateProfileCardPreview();
+        }
+
+        function updateProfileCardPreview() {
+            previewName.innerText = profileNameInput.value.trim() || "Artista Local";
+            if (profileState.avatarType === 'emoji') {
+                previewAvatarEmoji.innerText = profileEmojiInput.value || "🎨";
+                previewAvatarEmoji.classList.remove('hidden');
+                previewAvatarImg.classList.add('hidden');
+            } else {
+                previewAvatarImg.src = profileUrlInput.value || 'https://placehold.co/100x100?text=🎨';
+                previewAvatarImg.classList.remove('hidden');
+                previewAvatarEmoji.classList.add('hidden');
             }
         }
 
-        function formatNumber(num) {
-            if (num >= 1e12) return (num / 1e12).toFixed(1) + "T";
-            if (num >= 1e9) return (num / 1e9).toFixed(1) + "B";
-            if (num >= 1e6) return (num / 1e6).toFixed(1) + "M";
-            if (num >= 1e3) return (num / 1e3).toFixed(1) + "K";
-            return Math.floor(num).toString();
+        // Live typing inputs inside Profile overlay
+        profileNameInput.addEventListener('input', updateProfileCardPreview);
+        profileEmojiInput.addEventListener('input', updateProfileCardPreview);
+        profileUrlInput.addEventListener('input', updateProfileCardPreview);
+
+        avatarTypeEmoji.addEventListener('click', () => syncProfileAvatarType('emoji'));
+        avatarTypeUrl.addEventListener('click', () => syncProfileAvatarType('url'));
+
+        document.querySelectorAll('.emoji-selector').forEach(span => {
+            span.addEventListener('click', (e) => {
+                profileEmojiInput.value = e.target.innerText;
+                updateProfileCardPreview();
+            });
+        });
+
+        // Trigger opening profile overlay
+        btnProfile.addEventListener('click', () => {
+            // Conta desenhos locais na galeria
+            const artworks = JSON.parse(localStorage.getItem('draw_local_artworks') || '[]');
+            statsTotalArtworks.innerText = artworks.length;
+            statsTotalLayers.innerText = layers.length;
+
+            updateProfileUI();
+            openModal(modalProfileOverlay);
+        });
+
+        btnCloseProfileOverlayList.forEach(btn => {
+            btn.addEventListener('click', () => {
+                closeModal(modalProfileOverlay);
+            });
+        });
+
+        btnSubmitProfile.addEventListener('click', () => {
+            profileState.name = profileNameInput.value.trim() || "Artista Local";
+            profileState.avatarEmoji = profileEmojiInput.value.trim() || "🎨";
+            profileState.avatarUrl = profileUrlInput.value.trim();
+
+            localStorage.setItem('draw_user_profile', JSON.stringify(profileState));
+            updateProfileUI();
+            closeModal(modalProfileOverlay);
+            showToast("Identidade de Artista atualizada!", "success");
+        });
+
+        // LOCAL NOTEPAD STYLE GALLERY SYSTEM
+        btnSaveArt.addEventListener('click', () => {
+            saveArtTitleInput.value = "";
+            openModal(modalSave);
+        });
+
+        btnSubmitSave.addEventListener('click', () => {
+            const title = saveArtTitleInput.value.trim() || "Sem título";
+            const merged = getMergedCanvas();
+            const dataURL = merged.toDataURL('image/png', 0.85);
+
+            saveArtworkLocally(title, dataURL);
+            closeModal(modalSave);
+        });
+
+        function saveArtworkLocally(title, dataUrl) {
+            const artworks = JSON.parse(localStorage.getItem('draw_local_artworks') || '[]');
+            artworks.push({
+                id: crypto.randomUUID(),
+                title: title,
+                width: canvasWidth,
+                height: canvasHeight,
+                dataUrl: dataUrl,
+                createdAt: new Date().toISOString()
+            });
+            localStorage.setItem('draw_local_artworks', JSON.stringify(artworks));
+            showToast(`"${title}" salva localmente!`, 'success');
+            loadSavedArtworks();
         }
 
-        function createFloatingText(x, y, text, color) {
-            const el = document.createElement('div');
-            el.className = `floating-text pixel-font ${color} text-[10px]`;
-            el.style.left = `${x}px`; el.style.top = `${y}px`;
-            el.innerText = text; document.body.appendChild(el);
-            setTimeout(() => el.remove(), 700);
+        btnOpenGallery.addEventListener('click', () => {
+            loadSavedArtworks();
+            openModal(modalGallery);
+        });
+
+        function loadSavedArtworks() {
+            const galleryGrid = document.getElementById('gallery-grid');
+            const galleryEmpty = document.getElementById('gallery-empty');
+            const savedBadgeCount = document.getElementById('saved-badge-count');
+
+            const artworks = JSON.parse(localStorage.getItem('draw_local_artworks') || '[]');
+            artworks.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+            if (artworks.length > 0) {
+                savedBadgeCount.innerText = artworks.length;
+                savedBadgeCount.classList.remove('hidden');
+                galleryGrid.classList.remove('hidden');
+                galleryEmpty.classList.add('hidden');
+            } else {
+                savedBadgeCount.classList.add('hidden');
+                galleryGrid.classList.add('hidden');
+                galleryEmpty.classList.remove('hidden');
+            }
+
+            galleryGrid.innerHTML = '';
+            artworks.forEach(art => {
+                const card = document.createElement('div');
+                card.className = "group bg-slate-50 dark:bg-slate-800 border border-slate-200/60 dark:border-slate-700/80 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition flex flex-col relative";
+                
+                card.innerHTML = `
+                    <div class="h-28 bg-slate-100 dark:bg-slate-900 flex items-center justify-center p-2 relative overflow-hidden">
+                        <img src="${art.dataUrl}" class="max-w-full max-h-full object-contain rounded-md" alt="${art.title}">
+                        <div class="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center space-x-2">
+                            <button onclick="loadArtworkToCanvas('${art.id}')" class="p-2 bg-brand-500 hover:bg-brand-600 text-white rounded-lg text-xs font-semibold flex items-center gap-1 transition"><i class="fa-solid fa-folder-open"></i> Abrir</button>
+                            <button onclick="deleteArtwork('${art.id}')" class="p-2 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs transition" title="Excluir"><i class="fa-regular fa-trash-can"></i></button>
+                        </div>
+                    </div>
+                    <div class="p-3">
+                        <h4 class="font-bold text-xs truncate text-slate-800 dark:text-slate-100">${art.title}</h4>
+                        <div class="flex items-center justify-between mt-1.5 text-[10px] text-slate-400 dark:text-slate-500">
+                            <span>${art.width} x ${art.height}px</span>
+                            <span>${new Date(art.createdAt).toLocaleDateString('pt-BR')}</span>
+                        </div>
+                    </div>
+                `;
+                galleryGrid.appendChild(card);
+            });
         }
 
-        function addLog(msg) {
-            const log = document.getElementById('game-log');
-            log.innerHTML = `<div>> ${msg}</div>` + log.innerHTML;
+        window.loadArtworkToCanvas = function(artId) {
+            const artworks = JSON.parse(localStorage.getItem('draw_local_artworks') || '[]');
+            const art = artworks.find(a => a.id === artId);
+
+            if (art) {
+                canvasWidth = art.width;
+                canvasHeight = art.height;
+                canvasWidthInput.value = art.width;
+                canvasHeightInput.value = art.height;
+
+                resizeContainer(canvasWidth, canvasHeight);
+                clearLayersStack();
+
+                // Reconstrói uma nova camada com a imagem recuperada
+                const layer = createLayer(art.title, false);
+                const img = new Image();
+                img.onload = function() {
+                    layer.ctx.drawImage(img, 0, 0);
+                    saveCanvasState();
+                    showToast(`"${art.title}" aberta com sucesso!`, 'success');
+                    closeModal(modalGallery);
+                };
+                img.src = art.dataUrl;
+            } else {
+                showToast("Desenho não encontrado.", "error");
+            }
+        };
+
+        window.deleteArtwork = function(artId) {
+            const artworks = JSON.parse(localStorage.getItem('draw_local_artworks') || '[]');
+            const idx = artworks.findIndex(a => a.id === artId);
+            if (idx !== -1) {
+                const title = artworks[idx].title;
+                artworks.splice(idx, 1);
+                localStorage.setItem('draw_local_artworks', JSON.stringify(artworks));
+                showToast(`"${title}" excluída.`, "success");
+                loadSavedArtworks();
+            }
+        };
+
+        // IMMERSIVE / HIDE UI VIEW
+        btnHideUi.addEventListener('click', () => {
+            toggleUIElements(false);
+            showToast("Modo imersivo ativo. Tecla ESC para voltar", "info");
+        });
+
+        floatingBtnRestore.addEventListener('click', () => {
+            toggleUIElements(true);
+        });
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                toggleUIElements(true);
+            } else if (e.key === 'z' && (e.ctrlKey || e.metaKey)) {
+                undo();
+            } else if (e.key === 'y' && (e.ctrlKey || e.metaKey)) {
+                redo();
+            }
+        });
+
+        function toggleUIElements(show) {
+            if (show) {
+                mainHeader.classList.remove('h-0', 'overflow-hidden', 'py-0', 'border-0');
+                leftSidebar.classList.remove('w-0', 'overflow-hidden');
+                canvasHeaderToolbar.classList.remove('h-0', 'py-0', 'overflow-hidden', 'border-0');
+                canvasFooterStatus.classList.remove('h-0', 'py-0', 'overflow-hidden', 'border-0');
+                layersPanel.classList.remove('hidden');
+                
+                floatingImmersiveHud.classList.add('opacity-0', 'pointer-events-none');
+                floatingImmersiveHud.classList.remove('translate-y-0');
+            } else {
+                mainHeader.classList.add('h-0', 'overflow-hidden', 'py-0', 'border-0');
+                leftSidebar.classList.add('w-0', 'overflow-hidden');
+                canvasHeaderToolbar.classList.add('h-0', 'py-0', 'overflow-hidden', 'border-0');
+                canvasFooterStatus.classList.add('h-0', 'py-0', 'overflow-hidden', 'border-0');
+                layersPanel.classList.add('hidden');
+                
+                floatingImmersiveHud.classList.remove('opacity-0', 'pointer-events-none');
+                floatingImmersiveHud.classList.add('translate-y-0');
+            }
         }
 
-        window.onload = init;
+        // Evita que cliques, toques e arrastes no painel de camadas cheguem ao canvas de arte, prevenindo traços acidentais
+        ['mousedown', 'mousemove', 'mouseup', 'click', 'touchstart', 'touchmove', 'touchend'].forEach(eventType => {
+            layersPanel.addEventListener(eventType, (e) => {
+                e.stopPropagation();
+            });
+        });
+
+        let isDraggingPanel = false;
+        let panelStartX, panelStartY, panelStartLeft, panelStartTop;
+        let isLayersMinimized = false;
+
+        layersPanelHeader.addEventListener('mousedown', startDraggingPanel);
+        layersPanelHeader.addEventListener('touchstart', startDraggingPanel, { passive: true });
+
+        function startDraggingPanel(e) {
+            if (e.target.closest('button')) return; // Evita arrastar se clicar em botões internos do cabeçalho
+            isDraggingPanel = true;
+            
+            const clientX = e.type.startsWith('touch') ? e.touches[0].clientX : e.clientX;
+            const clientY = e.type.startsWith('touch') ? e.touches[0].clientY : e.clientY;
+            
+            panelStartX = clientX;
+            panelStartY = clientY;
+            
+            const rect = layersPanel.getBoundingClientRect();
+            panelStartLeft = rect.left;
+            panelStartTop = rect.top;
+            
+            // Altera o posicionamento estático para left/top absoluto dinamicamente
+            layersPanel.style.right = 'auto';
+            layersPanel.style.left = `${panelStartLeft}px`;
+            layersPanel.style.top = `${panelStartTop}px`;
+            
+            document.addEventListener('mousemove', dragPanel);
+            document.addEventListener('mouseup', stopDraggingPanel);
+            document.addEventListener('touchmove', dragPanel, { passive: false });
+            document.addEventListener('touchend', stopDraggingPanel);
+            
+            layersPanelHeader.classList.add('cursor-grabbing');
+        }
+
+        function dragPanel(e) {
+            if (!isDraggingPanel) return;
+            if (e.type.startsWith('touch')) e.preventDefault(); // Evita bounce da tela de celulares
+            
+            const clientX = e.type.startsWith('touch') ? e.touches[0].clientX : e.clientX;
+            const clientY = e.type.startsWith('touch') ? e.touches[0].clientY : e.clientY;
+            
+            const dx = clientX - panelStartX;
+            const dy = clientY - panelStartY;
+            
+            let newLeft = panelStartLeft + dx;
+            let newTop = panelStartTop + dy;
+            
+            // Trava o painel dentro dos limites visuais do navegador
+            const margin = 10;
+            newLeft = Math.max(margin, Math.min(window.innerWidth - layersPanel.offsetWidth - margin, newLeft));
+            newTop = Math.max(margin, Math.min(window.innerHeight - layersPanel.offsetHeight - margin, newTop));
+            
+            layersPanel.style.left = `${newLeft}px`;
+            layersPanel.style.top = `${newTop}px`;
+        }
+
+        function stopDraggingPanel() {
+            isDraggingPanel = false;
+            document.removeEventListener('mousemove', dragPanel);
+            document.removeEventListener('mouseup', stopDraggingPanel);
+            document.removeEventListener('touchmove', dragPanel);
+            document.removeEventListener('touchend', stopDraggingPanel);
+            layersPanelHeader.classList.remove('cursor-grabbing');
+        }
+
+        // Lógica de Minimizar / Expandir Painel de Camadas
+        btnMinimizeLayers.addEventListener('click', (e) => {
+            e.stopPropagation();
+            isLayersMinimized = !isLayersMinimized;
+            if (isLayersMinimized) {
+                layersPanelContent.classList.add('hidden');
+                layersPanel.style.height = 'auto';
+                layersPanel.classList.add('max-h-[56px]');
+                btnMinimizeLayers.innerHTML = '<i class="fa-solid fa-chevron-down"></i>';
+            } else {
+                layersPanelContent.classList.remove('hidden');
+                layersPanel.classList.remove('max-h-[56px]');
+                btnMinimizeLayers.innerHTML = '<i class="fa-solid fa-chevron-up"></i>';
+            }
+        });
+
+        // Lógica de Fechar/Esconder Painel
+        btnCloseLayers.addEventListener('click', (e) => {
+            e.stopPropagation();
+            layersPanel.classList.add('hidden');
+        });
+
+        // Botão de alternar exibição do painel no cabeçalho
+        btnToggleLayersPanel.addEventListener('click', () => {
+            const isHidden = layersPanel.classList.toggle('hidden');
+            if (!isHidden) {
+                // Restaura o estado maximizado por padrão se o painel for reaberto
+                isLayersMinimized = false;
+                layersPanelContent.classList.remove('hidden');
+                layersPanel.classList.remove('max-h-[56px]');
+                btnMinimizeLayers.innerHTML = '<i class="fa-solid fa-chevron-up"></i>';
+            }
+        });
+
+        // TOOL SELECTIONS
+        document.querySelectorAll('[data-tool]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('[data-tool]').forEach(b => b.classList.remove('active', 'border-brand-500', 'bg-brand-50', 'dark:bg-brand-950/20'));
+                
+                const target = e.currentTarget;
+                target.classList.add('active', 'border-brand-500', 'bg-brand-50', 'dark:bg-brand-950/20');
+                currentTool = target.getAttribute('data-tool');
+                
+                showToast(`Ferramenta: ${getToolName(currentTool)}`, 'info');
+            });
+        });
+
+        function getToolName(tool) {
+            const names = {
+                brush: 'Pincel', eraser: 'Borracha', fill: 'Balde', line: 'Linha',
+                rect: 'Retângulo', circle: 'Círculo', triangle: 'Triângulo', star: 'Estrela'
+            };
+            return names[tool] || tool;
+        }
+
+        // Dark Mode switch handler
+        btnDarkMode.addEventListener('click', () => {
+            const isDark = document.documentElement.classList.toggle('dark');
+            showToast(isDark ? "Modo escuro ativado" : "Modo claro ativado", 'info');
+        });
+
+        // GENERAL MODAL HELPERS
+        function openModal(modal) {
+            modal.classList.remove('pointer-events-none', 'opacity-0');
+            modal.firstElementChild.classList.remove('translate-y-4');
+        }
+
+        function closeModal(modal) {
+            modal.classList.add('pointer-events-none', 'opacity-0');
+            modal.firstElementChild.classList.add('translate-y-4');
+        }
+
+        document.querySelectorAll('.btn-close-modal').forEach(btn => {
+            btn.addEventListener('click', () => {
+                closeModal(modalSave);
+                closeModal(modalGallery);
+            });
+        });
+
+        document.getElementById('btn-undo').addEventListener('click', undo);
+        document.getElementById('btn-redo').addEventListener('click', redo);
+        document.getElementById('btn-clear').addEventListener('click', () => {
+            // Limpa somente a camada ativa
+            const activeL = layers.find(l => l.id === activeLayerId);
+            if (activeL) {
+                if (activeL.id === layers[0].id) {
+                    // Se for plano de fundo base, pinta de branco de novo
+                    activeL.ctx.fillStyle = '#ffffff';
+                    activeL.ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+                } else {
+                    activeL.ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+                }
+                saveCanvasState();
+                showToast(`Limpeza da "${activeL.name}" concluída`, "info");
+            }
+        });
+
+        // LOAD PROCESS ON INITIALIZATION
+        window.onload = function() {
+            initApp();
+            loadCustomColors();
+            loadUserProfile();
+            loadSavedArtworks();
+        };
     </script>
 </body>
 </html>
